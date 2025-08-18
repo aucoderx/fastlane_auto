@@ -1,0 +1,8 @@
+# iOS 配置
+app_identifier("{{BUNDLE_ID}}")
+apple_id("{{APPLE_ID}}")
+team_id("{{TEAM_ID}}")
+
+# Android 配置
+package_name("{{ANDROID_PACKAGE_NAME}}")
+json_key_file("{{GOOGLE_PLAY_JSON_KEY_PATH}}")

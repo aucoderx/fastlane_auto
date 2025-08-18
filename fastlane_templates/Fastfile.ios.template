@@ -1,0 +1,115 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "构建并生成截图"
+  lane :build_and_screenshot do
+    # 清理构建目录
+    clean_build_artifacts
+    
+    # 构建应用（用于模拟器）
+    build_app(
+      scheme: "{{SCHEME_NAME}}",
+      destination: "generic/platform=iOS Simulator",
+      configuration: "Debug",
+      skip_package_ipa: true,
+      skip_archive: true,
+      build_path: "./build"
+    )
+    
+    # 生成截图
+    screenshot
+  end
+  
+  desc "仅构建应用"
+  lane :build_only do
+    # 清理之前的构建
+    clean_build_artifacts
+    
+    # 获取可用的模拟器
+    simulator_name = "iPhone 16 Pro"  # 或者使用您系统中可用的模拟器
+    
+    # 构建应用
+    build_app(
+      scheme: "{{SCHEME_NAME}}",
+      destination: "platform=iOS Simulator,name=#{simulator_name}",
+      configuration: "Debug",
+      skip_package_ipa: true,
+      skip_archive: true,
+      build_path: "./build",
+      output_directory: "./build"
+    )
+    
+    UI.success("构建完成！应用已成功编译。")
+  end
+  
+  desc "生成应用截图"
+  lane :screenshot do
+    # 使用简单的测试运行来生成截图
+    run_tests(
+      scheme: "{{SCHEME_NAME}}",
+      devices: ["iPhone 16 Pro"],
+      only_testing: ["MyDemoAppUITests/MyDemoAppUITests/testTakeScreenshots"]
+    )
+    
+    UI.success("截图测试完成！查看测试报告中的截图附件")
+  end
+
+  desc "Run detox tests and collect screenshots"
+  lane :e2e_screenshots do
+    sh("cd ../.. && detox build --configuration ios.sim.debug")
+    sh("cd ../.. && detox test --configuration ios.sim.debug")
+    
+    sh("mkdir -p metadata/en-US/images/phoneScreenshots")
+    sh("mkdir -p metadata/zh-CN/images/phoneScreenshots")
+    sh("cd ../.. && cp artifacts/*/*/ios_*.png ios/fastlane/metadata/en-US/images/phoneScreenshots/")
+    sh("cd ../.. && cp artifacts/*/*/ios_*.png ios/fastlane/metadata/zh-CN/images/phoneScreenshots/")
+
+    # 删除原目录下的图片
+    sh("cd ../.. && rm -rf artifacts/*/*/ios_*.png")
+  end
+  
+  desc "运行 UI 测试"
+  lane :ui_test do
+    run_tests(
+      scheme: "{{SCHEME_NAME}}",
+      devices: ["iPhone 16 Pro (18.6)"],
+      only_testing: ["MyDemoAppUITests"]
+    )
+  end
+  
+  desc "运行调试测试"
+  lane :debug_test do
+    run_tests(
+      scheme: "{{SCHEME_NAME}}",
+      devices: ["iPhone 16 Pro (18.6)"],
+      only_testing: ["MyDemoAppUITests/DebugUITests/testSimpleScreenshot"]
+    )
+  end
+  
+  desc "清理构建文件"
+  lane :clean do
+    clean_build_artifacts
+    UI.success("构建文件已清理")
+  end
+  
+  desc "列出可用模拟器"
+  lane :list_devices do
+    sh("xcrun simctl list devices available | grep iPhone")
+  end
+  
+  desc "启动指定模拟器"
+  lane :boot_simulator do |options|
+    device_name = options[:device] || "iPhone 16 Pro"
+    
+    # 关闭所有运行中的模拟器
+    sh("xcrun simctl shutdown all")
+    
+    # 启动指定模拟器
+    sh("xcrun simctl boot '#{device_name}' || true")
+    
+    # 等待模拟器启动
+    sleep(10)
+    
+    UI.success("模拟器 #{device_name} 已启动")
+  end
+end

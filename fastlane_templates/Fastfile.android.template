@@ -1,0 +1,292 @@
+default_platform(:android)
+
+platform :android do
+  desc "运行所有测试"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  lane :launch_emulator do |options|
+    avd_name = options[:avd] || "Medium_Phone_API_36.0"
+    UI.message("➡️ 准备启动 Android 模拟器：#{avd_name}")
+
+    existing_devices = `adb devices`.lines.select { |line| line.include?("device") && !line.include?("List of devices") }
+
+    if existing_devices.empty?
+      emulator_cmd = [
+        "emulator", "-avd", avd_name,
+        "-no-audio", "-no-boot-anim", "-netdelay", "none", "-netspeed", "full"
+      ]
+
+      UI.message("🚀 正在后台启动模拟器：#{emulator_cmd.join(" ")}")
+
+      pid = Process.spawn(*emulator_cmd, [:out, :err] => "/tmp/emulator_output.log")
+      Process.detach(pid)
+
+      UI.message("⏳ 等待设备启动并连接...")
+
+      sh("adb wait-for-device")
+      sh("adb shell getprop sys.boot_completed | grep 1")
+
+      device_ready = false
+      max_attempts = 30
+
+      max_attempts.times do |i|
+        sleep(5)
+        devices_output = `adb devices 2>/dev/null`.strip
+        devices_lines = devices_output.lines
+
+        online_devices = devices_lines.select do |line|
+          line.strip.end_with?("device") && !line.include?("List of devices")
+        end
+
+        if online_devices.any?
+          device_ready = true
+          UI.success("✅ 设备已连接！检测到设备：")
+          online_devices.each { |device| UI.message("   #{device.strip}") }
+          break
+        else
+          UI.message("⌛ 设备尚未准备好（尝试第 #{i + 1}/#{max_attempts} 次）")
+          UI.message("   当前 adb devices 输出：#{devices_output}")
+        end
+      end
+
+      unless device_ready
+        UI.user_error!("❌ 启动模拟器失败或未检测到设备。请检查：
+          1. AVD '#{avd_name}' 是否存在
+          2. Android SDK 路径是否正确
+          3. 模拟器是否有足够的系统资源")
+      end
+    else
+      UI.success("✅ 检测到已有设备在运行")
+      existing_devices.each { |device| UI.message("   #{device.strip}") }
+    end
+
+    UI.message("🔄 等待设备完全启动...")
+    sleep(10)
+
+    begin
+      sh("adb shell getprop sys.boot_completed")
+      UI.success("📱 设备启动完成")
+    rescue
+      UI.message("⚠️  设备可能尚未完全启动，继续尝试...")
+    end
+  end
+
+  desc "运行截屏测试（自动启动模拟器并等待设备可用）"
+  lane :screenshots do |options|
+    UI.message("🚀 开始运行截图测试...")
+
+    serial = options[:serial]
+    if serial
+      ENV["ANDROID_SERIAL"] = serial
+      UI.message("📲 运行截图测试于指定设备：#{serial}")
+    else
+      UI.message("⚠️ 未指定设备 serial，screengrab 将使用 adb 列表中的第一个设备")
+    end
+
+    # 构建测试 APK（主 app 和 androidTest）
+    build_debug
+
+    screengrab(
+      app_package_name: "{{ANDROID_PACKAGE_NAME}}", # 你的实际包名
+      locales: ["zh-CN", "en-US"], 
+      tests_package_name: "{{ANDROID_PACKAGE_NAME}}.test",
+      app_apk_path: "app/build/outputs/apk/debug/app-debug.apk", # ✅ 明确指定 APK
+      tests_apk_path: "app/build/outputs/apk/debug/app-debug.apk",
+      clear_previous_screenshots: true
+    )
+
+    UI.success("🎉 截图测试完成")
+  end
+
+  desc "Run detox tests and collect screenshots"
+  lane :e2e_screenshots do
+    sh("cd ../.. && detox build --configuration android.emu.debug")
+    sh("cd ../.. && detox test --configuration android.emu.debug")
+    
+    sh("mkdir -p metadata/en-US/images/phoneScreenshots")
+    sh("mkdir -p metadata/zh-CN/images/phoneScreenshots")
+
+    sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/en-US/images/phoneScreenshots/")
+    sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/zh-CN/images/phoneScreenshots/")
+
+    # 删除原目录下的图片
+    sh("cd ../.. && rm -rf artifacts/*/*/android_*.png")
+
+  end
+
+  desc "Run detox tests and collect screenshots"
+  lane :e2e_screenshots_all_platform do
+    # 手机
+    sh("cd ../.. && detox build --configuration android.emu.debug")
+    sh("cd ../.. && detox test --configuration android.emu.debug")
+    
+    sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/en-US/images/phoneScreenshots/")
+    sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/zh-CN/images/phoneScreenshots/")
+
+    # 删除原目录下的图片
+    sh("cd ../.. && rm -rf artifacts/*/*/android_*.png")
+
+    # 7 寸平板
+    sh("cd ../.. && detox build --configuration android.emu.debug.tablet7")
+    sh("cd ../.. && detox test --configuration android.emu.debug.tablet7")
+    
+    sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/en-US/images/sevenInchScreenshots/")
+    sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/zh-CN/images/sevenInchScreenshots/")
+
+    # 删除原目录下的图片
+    sh("cd ../.. && rm -rf artifacts/*/*/android_*.png")
+
+    # 10 寸平板
+    sh("cd ../.. && detox build --configuration android.emu.debug.tablet10")
+    sh("cd ../.. && detox test --configuration android.emu.debug.tablet10")
+    
+    sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/en-US/images/tenInchScreenshots/")
+    sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/zh-CN/images/tenInchScreenshots/")
+
+    # 删除原目录下的图片
+    sh("cd ../.. && rm -rf artifacts/*/*/android_*.png")
+
+  end
+
+  desc "关闭指定 Android 模拟器，传入 serial，如 emulator-5554"
+  lane :shutdown_emulator do |options|
+    serial = options[:serial]
+    unless serial
+      UI.user_error!("❌ 缺少参数：请传入 serial，例如：serial:\"emulator-5554\"")
+    end
+
+    UI.message("🛑 正在关闭模拟器：#{serial}")
+    begin
+      sh("adb -s #{serial} emu kill")
+      UI.success("✅ 模拟器 #{serial} 已关闭")
+    rescue
+      UI.user_error!("❌ 无法关闭模拟器 #{serial}，请确认 serial 是否正确")
+    end
+  end
+
+  desc "启动模拟器 + 截图 + 关闭模拟器（完整流程）"
+  lane :full_screenshot_flow do |options|
+    avd = options[:avd] || "Medium_Phone_API_36.0"
+
+    # 启动模拟器并获取 serial
+    launch_emulator(avd: avd)
+
+    # 获取刚刚启动的 emulator serial（假设只有一个新 emulator 启动）
+    emulator_serial = `adb devices`.lines.find { |line| line.start_with?("emulator-") && line.include?("device") }&.split&.first
+
+    if emulator_serial.nil?
+      UI.user_error!("❌ 未找到已连接的模拟器")
+    end
+
+    # 运行截图逻辑
+    run_screengrab(serial: emulator_serial)
+
+    # 关闭模拟器
+    shutdown_emulator(serial: emulator_serial)
+  end
+
+  desc "构建应用"
+  lane :build do
+    gradle(
+      task: "clean assembleRelease",
+      project_dir: "."
+    )
+  end
+
+  desc "构建 AAB"
+  lane :build_aab do
+    gradle(
+      task: "clean bundleRelease",
+      project_dir: "."
+    )
+  end
+
+  # 打 debug 包的 lane
+  lane :build_debug do
+    gradle(
+      task: "assembleDebug assembleDebugAndroidTest bundleDebugJsAndAssets",
+      project_dir: "."
+    )
+  end
+
+  # 修改发布状态的 lane
+  desc "将发布状态修改为 'completed'，如果失败则给出提示"
+  lane :change_release_status_to_completed do
+    begin
+      track = options[:track]
+      upload_to_play_store(
+        track: track,
+        version_code: {{APP_VERSION}},
+        release_status: "completed",
+        skip_upload_apk: true
+      )
+    rescue => e
+      UI.message("Failed to change release status to 'completed': #{e.message}. The app is still in 'draft' state.")
+    end
+  end
+
+  desc "上传到内部测试，最快速发布给测试人员，最多 100 位测试者。"
+  lane :internal do
+    build_aab
+
+    upload_to_play_store(
+      track: "internal",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      version_code: {{APP_VERSION}},
+      release_status: "draft",
+      skip_upload_apk: true
+    )
+
+    change_release_status_to_completed(track: "internal")
+  end
+
+  desc "上传到封闭测试，适合小范围测试用户。"
+  lane :alpha do
+    build_aab
+
+    upload_to_play_store(
+      track: "alpha",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      version_code: {{APP_VERSION}},
+      release_status: "draft",
+      skip_upload_apk: true
+    )
+
+    change_release_status_to_completed(track: "alpha")
+  end
+
+  desc "封闭或公开测试轨道，用户群体比 alpha 大。"
+  lane :beta do
+    build_aab
+
+    upload_to_play_store(
+      track: "beta",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      version_code: {{APP_VERSION}},
+      release_status: "draft",
+      skip_upload_apk: true
+    )
+
+    change_release_status_to_completed(track: "beta")
+  end
+
+  desc "发布到 Google Play Store"
+  lane :release do
+    build_aab
+
+    upload_to_play_store(
+      track: "production",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      version_code: {{APP_VERSION}},
+      release_status: "completed",
+      skip_upload_apk: true,
+    )
+  end
+end
+
+# 统一的 after_all 配置
+after_all do |lane|
+  notification(message: "Fastlane finished '#{lane}' successfully! 🎉")
+end

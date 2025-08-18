@@ -1,0 +1,20 @@
+app_identifier("{{BUNDLE_ID}}")
+username("{{APPLE_ID}}")
+team_id("{{TEAM_ID}}")
+
+# 应用信息
+price_tier(0)
+primary_category("{{APP_CATEGORY}}")
+secondary_category("{{APP_SECONDARY_CATEGORY}}")
+
+# 发布选项
+submit_for_review({{SUBMIT_FOR_REVIEW}})
+automatic_release({{AUTOMATIC_RELEASE}})
+force(true)
+skip_metadata(false)
+skip_screenshots(false)
+skip_binary_upload(false)
+
+# 元数据目录
+metadata_path("./fastlane/metadata/ios")
+screenshots_path("./fastlane/screenshots/ios")
