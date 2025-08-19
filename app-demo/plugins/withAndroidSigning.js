@@ -8,7 +8,7 @@ module.exports = function withAndroidSigning(config) {
             debug {
                 keyAlias 'my-key-alias'
                 keyPassword 'autocoder123'
-                storeFile file('')
+                storeFile file('../../keystore/my-release-key.keystore')
                 storePassword 'autocoder123'
             }
             release {

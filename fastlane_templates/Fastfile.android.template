@@ -206,7 +206,7 @@ platform :android do
   # 打 debug 包的 lane
   lane :build_debug do
     gradle(
-      task: "assembleDebug assembleDebugAndroidTest bundleDebugJsAndAssets",
+      task: "assembleDebug assembleDebugAndroidTest",
       project_dir: "."
     )
   end
