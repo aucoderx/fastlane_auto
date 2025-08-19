@@ -42,7 +42,6 @@ jobs:
         run: |
           curl -L https://your-server.com/expo-source.zip -o expo-source.zip
           unzip expo-source.zip
-          cd ${{ github.event.inputs.appName }}
       
       - name: deal test env
     
@@ -50,10 +49,11 @@ jobs:
         run: |
           mkdir -p fastlane_templates/certificates/
           echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane_templates/certificates/google-play-service-account.json
-          cd app-demo
+  
 
       - name: Install dependencies
         run: |
+          cd ${{ github.event.inputs.appName }}
           npm install
           npm install -g expo-cli
 
@@ -61,6 +61,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: './${{ github.event.inputs.appName }}/package-lock.json'
 
       - name: Install Android SDK and Emulator
         run: |
@@ -88,16 +89,7 @@ jobs:
 
       - name: Build for iOS or Android
         run: |
-          if [ "${{ github.event.inputs.platform }}" == "ios" ]; then
-            expo prebuild --platform ios
-          elif [ "${{ github.event.inputs.platform }}" == "android" ]; then
-            expo prebuild --platform android
-          elif [ "${{ github.event.inputs.platform }}" == "all" ]; then
-            expo prebuild
-          fi
-      
-      - name: exec prebuild
-        run: |
+          cd ${{ github.event.inputs.appName }}
           if [ "${{ github.event.inputs.platform }}" == "ios" ]; then
             expo prebuild --platform ios
           elif [ "${{ github.event.inputs.platform }}" == "android" ]; then
@@ -108,52 +100,45 @@ jobs:
 
       - name: exec manage_fastlane.sh
         run: |
-          cd ..
           ./manage_fastlane.sh ${{ github.event.inputs.appName }}
-          cd ${{ github.event.inputs.appName }}
+          
       
       - name: android build
         if: ${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all' }}
         run: |
-          # Assuming you've set up Fastlane for screenshots and uploading.
-          cd android
+          cd ${{ github.event.inputs.appName }}/android
           ./fastlane/deploy_android.sh build_debug
           ./fastlane/deploy_android.sh build_aab
-          cd ..
+
       
       - name: android screengrab
         if: ${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.needScreengrab == 'true' }}
         run: |
-          # Assuming you've set up Fastlane for screenshots and uploading.
-          cd android
+          cd ${{ github.event.inputs.appName }}/android
           ./fastlane/deploy_android.sh screengrab
-          cd ..
+
 
       - name: android appUpload
         if: ${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.appUploadCommend != '' }}
         run: |
-          # Assuming you've set up Fastlane for screenshots and uploading.
-          cd android
+          cd ${{ github.event.inputs.appName }}/android
           ./fastlane/deploy_android.sh ${{github.event.inputs.appUploadCommend}}
-          cd ..
+
       
       - name: ios build
         if: ${{ github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all' }}
         run: |
-          cd build_only
-          ./fastlane/deploy_ios.sh build_aab
-          cd ..
+          cd ${{ github.event.inputs.appName }}/ios
+          ./fastlane/deploy_ios.sh build_only
       
       - name: ios screengrab
         if: ${{ (github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all') && github.event.inputs.needScreengrab == 'true' }}
         run: |
-          cd android
+          cd ${{ github.event.inputs.appName }}/ios
           ./fastlane/deploy_ios.sh screengrab
-          cd ..
 
       - name: ios appUpload
         if: ${{ (github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all') && github.event.inputs.appUploadCommend != '' }}
         run: |
-          cd android
+          cd ${{ github.event.inputs.appName }}/ios
           ./fastlane/deploy_ios.sh ${{github.event.inputs.appUploadCommend}}
-          cd ..
