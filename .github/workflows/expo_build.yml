@@ -141,6 +141,7 @@ jobs:
       - name: android screengrab
         env:
           ANDROID_EMULATOR_FORCE_32BIT: true # 禁用HVF加速
+          ANDROID_EMULATOR_USE_HARDWARE_ACCELERATION: false
         if: ${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.needScreengrab == 'true' }}
         run: |
           cd ${{ github.event.inputs.appName }}/android

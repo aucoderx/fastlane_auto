@@ -2,7 +2,11 @@ name: adjust env
 
 on:
   workflow_dispatch:
-
+    inputs:
+      environment:
+        description: 'Choose environment (prod or test)'
+        required: true
+        default: 'prod'
 
 jobs:
   build:
@@ -35,40 +39,42 @@ jobs:
       # 安装安装模拟器，用于截图
       - name: Install Android SDK and Emulator
         # 如果上一步没有恢复缓存，则执行此步骤
-        # 1if: steps.cache-android.outputs.cache-hit != 'true'
+        if: steps.cache-android.outputs.cache-hit != 'true'
         run: |          
           echo "Installing Android SDK and system image..."
-          echo "/Users/runner/Library/Android/sdk/system-images"
-          sdkmanager "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+          yes | sdkmanager "platforms;android-30" "system-images;android-30;google_apis;arm64-v8a"
 
           echo "Accepting licenses..."
           yes | sdkmanager --licenses
           
           echo "Creating AVD..."
-          echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;x86_64" --device "pixel_5"
+          echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;arm64-v8a" --device "pixel_5"
 
-
-      - name: android env
+      # 安卓截屏
+      - name: android start
+        env:
+          ANDROID_EMULATOR_FORCE_32BIT: true # 禁用HVF加速
+          ANDROID_EMULATOR_USE_HARDWARE_ACCELERATION: false
+        if: ${{ github.event.inputs.environment == 'prod' }}
         run: |
-            cd /Users/runner/Library/Android/sdk
-            ls
-            echo "==== ls system-images ======"
-            cd system-images
-            ls
-            echo "===== ls android-30 ====="
-            cd android-30
-            ls
-            echo "===== ls google_apis ====="
-            cd google_apis
-            ls
-            echo "===== ls x86_64 ====="
-            cd x86_64
-            ls
-            echo "===== ls bin ====="
-            cd bin
-            ls
-            echo "================="
-            echo ${{ env.ANDROID_SDK_ROOT }}/system-images
+          /Users/runner/Library/Android/sdk/emulator/emulator -avd pixel_5 -no-window -no-audio -verbose & 
+          echo "Waiting for the emulator to boot..."
+          # 等待模拟器启动完成
+          adb wait-for-device
+
+          echo "Emulator is ready. Performing actions..." 
+          adb -s emulator-5554 emu kill
+
+      # 安卓截屏
+      - name: android start
+        env:
+          ANDROID_EMULATOR_FORCE_32BIT: true # 禁用HVF加速
+          ANDROID_EMULATOR_USE_HARDWARE_ACCELERATION: false
+        if: ${{ github.event.inputs.environment == 'test' }}
+        run: |
+          /Users/runner/Library/Android/sdk/emulator/emulator -avd pixel_5 -no-window -no-audio -verbose
+          adb -s emulator-5554 emu kill
+
       
        
 
