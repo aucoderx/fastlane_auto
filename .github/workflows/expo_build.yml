@@ -67,27 +67,31 @@ jobs:
           npm install
           npm install -g expo-cli
 
-      - name: Install Android SDK and Emulator
-        run: |
-          sdkmanager "platforms;android-30" "system-images;android-30;google_apis;x86_64"
-
-          # Accept licenses
-          yes | sdkmanager --licenses
-
-          # Create Pixel_8_Pro emulator
-          echo "no" | avdmanager create avd -n Pixel_8_Pro -k "system-images;android-30;google_apis;x86_64" --device "pixel_8_pro"
-
       - name: Cache Android SDK and Emulator
+        id: cache-android
         uses: actions/cache@v3
         with:
           path: |
             ~/.android
             ~/.cache
             ~/.gradle
-            $HOME/.local/share/android
-          key: android-emulator-${{ runner.os }}-Pixel_8_Pro
+            ${{ env.ANDROID_SDK_ROOT }}/system-images
+          key: android-emulator-${{ runner.os }}-android-30
           restore-keys: |
             android-emulator-${{ runner.os }}-
+
+      - name: Install Android SDK and Emulator
+        # 如果上一步没有恢复缓存，则执行此步骤
+        if: steps.cache-android.outputs.cache-hit != 'true'
+        run: |          
+          echo "Installing Android SDK and system image..."
+          sdkmanager "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+
+          echo "Accepting licenses..."
+          yes | sdkmanager --licenses
+          
+          echo "Creating AVD..."
+          echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;x86_64" --device "pixel_5"
         
 
       - name: Build for iOS or Android
