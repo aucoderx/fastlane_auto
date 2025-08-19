@@ -45,10 +45,10 @@ jobs:
           cd ${{ github.event.inputs.appName }}
       
       - name: deal test env
+    
         if: ${{ github.event.inputs.environment == 'test' }}
         run: |
-          if [ ! -f "$FILE_PATH" ]; then
-            mkdir -p fastlane_templates/certificates/google-play-service-account.json
+          mkdir -p fastlane_templates/certificates/google-play-service-account.json
           echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane_templates/certificates/google-play-service-account.json
           cd app-demo
 
