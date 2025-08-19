@@ -30,5 +30,14 @@ jobs:
             echo "===== ls bin ====="
             cd bin
             ls
-
+      - name: android env set
+        run: |
+            /Users/runner/Library/Android/sdk/cmdline-tools/latest/bin/sdkmanager --list
+            echo "/Users/runner/Library/Android/sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+            echo "/Users/runner/Library/Android/sdk/platform-tools" >> $GITHUB_PATH
+    
+      - name: android env adjust
+        run: |
+            sdkmanager --list
+       
 

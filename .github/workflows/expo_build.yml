@@ -37,6 +37,11 @@ jobs:
         with:
           node-version: '16'
       
+      - name: env set
+        run: |
+            echo "/Users/runner/Library/Android/sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+            echo "/Users/runner/Library/Android/sdk/platform-tools" >> $GITHUB_PATH
+      
       - name: Download Expo source (for prod environment)
         if: ${{ github.event.inputs.environment == 'prod' }}
         run: |
@@ -44,12 +49,17 @@ jobs:
           unzip expo-source.zip
       
       - name: deal test env
-    
         if: ${{ github.event.inputs.environment == 'test' }}
         run: |
           mkdir -p fastlane_templates/certificates/
           echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane_templates/certificates/google-play-service-account.json
   
+      - name: Setup Node.js and cache dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: './${{ github.event.inputs.appName }}/package-lock.json'
 
       - name: Install dependencies
         run: |
@@ -57,15 +67,8 @@ jobs:
           npm install
           npm install -g expo-cli
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: './${{ github.event.inputs.appName }}/package-lock.json'
-
       - name: Install Android SDK and Emulator
         run: |
-          # Install Android SDK components
           sdkmanager "platforms;android-30" "system-images;android-30;google_apis;x86_64"
 
           # Accept licenses
