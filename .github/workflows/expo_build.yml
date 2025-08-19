@@ -36,27 +36,37 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '16'
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
+      
+      - name: Download Expo source (for prod environment)
+        if: ${{ github.event.inputs.environment == 'prod' }}
+        run: |
+          curl -L https://your-server.com/expo-source.zip -o expo-source.zip
+          unzip expo-source.zip
+          cd ${{ github.event.inputs.appName }}
+      
+      - name: deal test env
+        if: ${{ github.event.inputs.environment == 'test' }}
+        run: |
+          echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane_templates/certificates/google-play-service-account.json
+          cd app-demo
 
       - name: Install dependencies
         run: |
           npm install
           npm install -g expo-cli
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
       - name: Install Android SDK and Emulator
         run: |
           # Install Android SDK components
-          sdkmanager "platform-tools" "emulator" "system-images;android-30;google_apis;x86_64" "system-images;android-30;google_apis;arm64-v8a" "platforms;android-30"
+          sdkmanager "platforms;android-30" "system-images;android-30;google_apis;x86_64"
 
           # Accept licenses
           yes | sdkmanager --licenses
-
-          # Install Pixel 8 Pro System Image
-          sdkmanager "system-images;android-30;google_apis;x86_64"
 
           # Create Pixel_8_Pro emulator
           echo "no" | avdmanager create avd -n Pixel_8_Pro -k "system-images;android-30;google_apis;x86_64" --device "pixel_8_pro"
@@ -72,24 +82,7 @@ jobs:
           key: android-emulator-${{ runner.os }}-Pixel_8_Pro
           restore-keys: |
             android-emulator-${{ runner.os }}-
-
-      - name: Download Expo source (for prod environment)
-        if: ${{ github.event.inputs.environment == 'prod' }}
-        run: |
-          curl -L https://your-server.com/expo-source.zip -o expo-source.zip
-          unzip expo-source.zip
-          cd ${{ github.event.inputs.appName }}
-      
-      - name: deal test env
-        if: ${{ github.event.inputs.environment == 'test' }}
-        run: |
-          echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane_templates/certificates/google-play-service-account.json
-          cd app-demo
         
-          
-      - name: Install dependencies for Expo
-        run: |
-          npm install
 
       - name: Build for iOS or Android
         run: |
