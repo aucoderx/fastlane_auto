@@ -88,6 +88,13 @@ replace_template_variables() {
     sed -i.bak "s/{{APP_NAME}}/${APP_NAME}/g" "$output_file"
     sed -i.bak "s/{{BUNDLE_ID}}/${BUNDLE_ID}/g" "$output_file"
     sed -i.bak "s/{{ANDROID_PACKAGE_NAME}}/${ANDROID_PACKAGE_NAME}/g" "$output_file"
+    sed -i.bak "s/{{APP_VERSION}}/${APP_VERSION}/g" "$output_file"
+    sed -i.bak "s/{{APP_DESCRIPTION}}/${APP_DESCRIPTION}/g" "$output_file"
+    sed -i.bak "s/{{APP_SHORT_DESCRIPTION}}/${APP_SHORT_DESCRIPTION}/g" "$output_file"
+    sed -i.bak "s/{{APP_DESCRIPTION_EN}}/${APP_DESCRIPTION_EN}/g" "$output_file"
+    sed -i.bak "s/{{APP_SHORT_DESCRIPTION_EN}}/${APP_SHORT_DESCRIPTION_EN}/g" "$output_file"
+    sed -i.bak "s/{{APP_KEYWORDS}}/${APP_KEYWORDS}/g" "$output_file"
+    sed -i.bak "s#{{PRIVACY_URL}}#${PRIVACY_URL}#g" "$output_file"
 
     # Apple 相关
     sed -i.bak "s/{{APPLE_ID}}/${APPLE_ID}/g" "$output_file"

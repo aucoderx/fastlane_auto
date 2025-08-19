@@ -2,7 +2,7 @@
   "expo": {
     "name": "gen-app",
     "slug": "gen-app",
-    "version": "1.0.1",
+    "version": "1.0.5",
     "scheme": "gen-app",
     "web": {
       "bundler": "metro",
@@ -37,6 +37,7 @@
       "bundleIdentifier": "com.anonymous.gen-app"
     },
     "android": {
+      "versionCode": 105,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
