@@ -102,8 +102,7 @@ platform :android do
 
   desc "Run detox tests and collect screenshots"
   lane :e2e_screenshots do
-    sh("cd ../.. && detox build --configuration android.emu.debug")
-    sh("cd ../.. && detox test --configuration android.emu.debug")
+    sh("cd ../.. && npx detox test --configuration android.emu.debug")
     
     sh("mkdir -p metadata/en-US/images/phoneScreenshots")
     sh("mkdir -p metadata/zh-CN/images/phoneScreenshots")
@@ -119,7 +118,6 @@ platform :android do
   desc "Run detox tests and collect screenshots"
   lane :e2e_screenshots_all_platform do
     # 手机
-    sh("cd ../.. && detox build --configuration android.emu.debug")
     sh("cd ../.. && detox test --configuration android.emu.debug")
     
     sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/en-US/images/phoneScreenshots/")
@@ -129,7 +127,6 @@ platform :android do
     sh("cd ../.. && rm -rf artifacts/*/*/android_*.png")
 
     # 7 寸平板
-    sh("cd ../.. && detox build --configuration android.emu.debug.tablet7")
     sh("cd ../.. && detox test --configuration android.emu.debug.tablet7")
     
     sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/en-US/images/sevenInchScreenshots/")
@@ -139,7 +136,6 @@ platform :android do
     sh("cd ../.. && rm -rf artifacts/*/*/android_*.png")
 
     # 10 寸平板
-    sh("cd ../.. && detox build --configuration android.emu.debug.tablet10")
     sh("cd ../.. && detox test --configuration android.emu.debug.tablet10")
     
     sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/en-US/images/tenInchScreenshots/")
