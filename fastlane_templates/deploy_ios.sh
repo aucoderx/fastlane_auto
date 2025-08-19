@@ -9,7 +9,7 @@ case $ACTION in
         bundle exec fastlane ios test
         ;;
     build_only)
-        echo "运行 iOS 测试..."
+        echo "运行 iOS build_only..."
         bundle exec fastlane ios build_only
         ;;
     beta)

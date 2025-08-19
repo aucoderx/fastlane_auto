@@ -1,0 +1,133 @@
+name: Expo Build and Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose environment (prod or test)'
+        required: true
+        default: 'test'
+      platform:
+        description: 'Choose platform (ios or android)'
+        required: true
+        default: 'all'
+      appName:
+        description: 'app name'
+        required: true
+        default: 'app-demo'
+      needScreengrab:
+        description: 'need screengrab'
+        required: true
+        default: 'true'
+      appUploadCommend:
+        description: 'app upload commend'
+        required: true
+        default: ''
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install -g expo-cli
+
+      - name: Download Expo source (for prod environment)
+        if: ${{ github.event.inputs.environment == 'prod' }}
+        run: |
+          curl -L https://your-server.com/expo-source.zip -o expo-source.zip
+          unzip expo-source.zip
+          cd ${{ github.event.inputs.appName }}
+      
+      - name: deal test env
+        if: ${{ github.event.inputs.environment == 'test' }}
+        run: |
+          echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane_templates/certificates/google-play-service-account.json
+          cd app-demo
+        
+          
+      - name: Install dependencies for Expo
+        run: |
+          npm install
+
+      - name: Build for iOS or Android
+        run: |
+          if [ "${{ github.event.inputs.platform }}" == "ios" ]; then
+            expo prebuild --platform ios
+          elif [ "${{ github.event.inputs.platform }}" == "android" ]; then
+            expo prebuild --platform android
+          elif [ "${{ github.event.inputs.platform }}" == "all" ]; then
+            expo prebuild
+          fi
+      
+      - name: exec prebuild
+        run: |
+          if [ "${{ github.event.inputs.platform }}" == "ios" ]; then
+            expo prebuild --platform ios
+          elif [ "${{ github.event.inputs.platform }}" == "android" ]; then
+            expo prebuild --platform android
+          elif [ "${{ github.event.inputs.platform }}" == "all" ]; then
+            expo prebuild
+          fi
+
+      - name: exec manage_fastlane.sh
+        run: |
+          cd ..
+          ./manage_fastlane.sh ${{ github.event.inputs.appName }}
+          cd ${{ github.event.inputs.appName }}
+      
+      - name: android build
+        if: ${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all' }}
+        run: |
+          # Assuming you've set up Fastlane for screenshots and uploading.
+          cd android
+          ./fastlane/deploy_android.sh build_debug
+          ./fastlane/deploy_android.sh build_aab
+          cd ..
+      
+      - name: android screengrab
+        if: ${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.needScreengrab == 'true' }}
+        run: |
+          # Assuming you've set up Fastlane for screenshots and uploading.
+          cd android
+          ./fastlane/deploy_android.sh screengrab
+          cd ..
+
+      - name: android appUpload
+        if: ${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.appUploadCommend != '' }}
+        run: |
+          # Assuming you've set up Fastlane for screenshots and uploading.
+          cd android
+          ./fastlane/deploy_android.sh ${{github.event.inputs.appUploadCommend}}
+          cd ..
+      
+      - name: ios build
+        if: ${{ github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all' }}
+        run: |
+          cd build_only
+          ./fastlane/deploy_ios.sh build_aab
+          cd ..
+      
+      - name: ios screengrab
+        if: ${{ (github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all') && github.event.inputs.needScreengrab == 'true' }}
+        run: |
+          cd android
+          ./fastlane/deploy_ios.sh screengrab
+          cd ..
+
+      - name: ios appUpload
+        if: ${{ (github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all') && github.event.inputs.appUploadCommend != '' }}
+        run: |
+          cd android
+          ./fastlane/deploy_ios.sh ${{github.event.inputs.appUploadCommend}}
+          cd ..
