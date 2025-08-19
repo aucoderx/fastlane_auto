@@ -81,9 +81,19 @@ jobs:
           path: |
             ~/.android
             ~/.cache
-            ~/.gradle
-            ${{ env.ANDROID_SDK_ROOT }}/system-images
+            /Users/runner/Library/Android/sdk/system-images
           key: android-emulator-${{ runner.os }}-android-30
+          restore-keys: |
+            android-emulator-${{ runner.os }}-
+        
+      # 缓存安装的安卓模拟器
+      - name: Cache gradle
+        id: cache-gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle
+          key: gradle-${{ runner.os }}-${{ github.event.inputs.environment }}
           restore-keys: |
             android-emulator-${{ runner.os }}-
 
