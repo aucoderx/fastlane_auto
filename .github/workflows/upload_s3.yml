@@ -1,0 +1,23 @@
+name: upload s3
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+
+      - name: android env set
+        run: |
+            
+    
+      - name: android env adjust
+        run: |
+            
+       
+

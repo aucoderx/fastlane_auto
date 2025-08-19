@@ -117,18 +117,6 @@ jobs:
       - name: exec manage_fastlane.sh
         run: |
           ./manage_fastlane.sh ${{ github.event.inputs.appName }}
-          
-      # 缓存 gradle 结果，流程执行完的后续节点进行的缓存，如果流程执行失败，缓存会失败
-      - name: Setup gradle cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ github.event.inputs.appName }}/android/.gradle/caches
-            ${{ github.event.inputs.appName }}/android/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ github.event.inputs.appName }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-          cache-dependency-path: './${{ github.event.inputs.appName }}/package-lock.json'
 
       # 构建安卓的IOS包，Abb包
       - name: android build

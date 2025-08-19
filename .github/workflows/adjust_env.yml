@@ -11,33 +11,64 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      
+        # 设置环境变量
+      - name: env set
+        run: |
+            echo "/Users/runner/Library/Android/sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+            echo "/Users/runner/Library/Android/sdk/platform-tools" >> $GITHUB_PATH
+
+      # 缓存安装的安卓模拟器
+      - name: Cache Android SDK and Emulator
+        id: cache-android
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android
+            ~/.cache
+            ~/.gradle
+            /Users/runner/Library/Android/sdk/system-images
+          key: android-emulator-${{ runner.os }}-android-30
+          restore-keys: |
+            android-emulator-${{ runner.os }}-
+
+      # 安装安装模拟器，用于截图
+      - name: Install Android SDK and Emulator
+        # 如果上一步没有恢复缓存，则执行此步骤
+        # 1if: steps.cache-android.outputs.cache-hit != 'true'
+        run: |          
+          echo "Installing Android SDK and system image..."
+          echo "/Users/runner/Library/Android/sdk/system-images"
+          sdkmanager "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+
+          echo "Accepting licenses..."
+          yes | sdkmanager --licenses
+          
+          echo "Creating AVD..."
+          echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;x86_64" --device "pixel_5"
+
 
       - name: android env
         run: |
             cd /Users/runner/Library/Android/sdk
             ls
-            echo "==== ls platform-tools ======"
-            cd platform-tools
+            echo "==== ls system-images ======"
+            cd system-images
             ls
-            echo "===== emulator -list-avds ====="
-            emulator -list-avds
-            echo "===== ls cmdline-tools ====="
-            cd ../cmdline-tools
+            echo "===== ls android-30 ====="
+            cd android-30
             ls
-            echo "===== ls latest ====="
-            cd latest
+            echo "===== ls google_apis ====="
+            cd google_apis
+            ls
+            echo "===== ls x86_64 ====="
+            cd x86_64
             ls
             echo "===== ls bin ====="
             cd bin
             ls
-      - name: android env set
-        run: |
-            /Users/runner/Library/Android/sdk/cmdline-tools/latest/bin/sdkmanager --list
-            echo "/Users/runner/Library/Android/sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-            echo "/Users/runner/Library/Android/sdk/platform-tools" >> $GITHUB_PATH
-    
-      - name: android env adjust
-        run: |
-            sdkmanager --list
+            echo "================="
+            echo ${{ env.ANDROID_SDK_ROOT }}/system-images
+      
        
 
