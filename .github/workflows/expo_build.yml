@@ -47,6 +47,32 @@ jobs:
           npm install
           npm install -g expo-cli
 
+      - name: Install Android SDK and Emulator
+        run: |
+          # Install Android SDK components
+          sdkmanager "platform-tools" "emulator" "system-images;android-30;google_apis;x86_64" "system-images;android-30;google_apis;arm64-v8a" "platforms;android-30"
+
+          # Accept licenses
+          yes | sdkmanager --licenses
+
+          # Install Pixel 8 Pro System Image
+          sdkmanager "system-images;android-30;google_apis;x86_64"
+
+          # Create Pixel_8_Pro emulator
+          echo "no" | avdmanager create avd -n Pixel_8_Pro -k "system-images;android-30;google_apis;x86_64" --device "pixel_8_pro"
+
+      - name: Cache Android SDK and Emulator
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.android
+            ~/.cache
+            ~/.gradle
+            $HOME/.local/share/android
+          key: android-emulator-${{ runner.os }}-Pixel_8_Pro
+          restore-keys: |
+            android-emulator-${{ runner.os }}-
+
       - name: Download Expo source (for prod environment)
         if: ${{ github.event.inputs.environment == 'prod' }}
         run: |
