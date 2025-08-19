@@ -16,6 +16,19 @@ jobs:
         run: |
             cd /Users/runner/Library/Android/sdk
             ls
+            echo "==== ls platform-tools ======"
             cd platform-tools
             ls
+            echo "===== emulator -list-avds ====="
             emulator -list-avds
+            echo "===== ls cmdline-tools ====="
+            cd ../cmdline-tools
+            ls
+            echo "===== ls latest ====="
+            cd latest
+            ls
+            echo "===== ls bin ====="
+            cd bin
+            ls
+
+
