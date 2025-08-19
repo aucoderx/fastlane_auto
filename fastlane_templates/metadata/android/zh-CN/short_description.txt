@@ -1,1 +1,1 @@
-测试用移动应用
+{{APP_SHORT_DESCRIPTION}}

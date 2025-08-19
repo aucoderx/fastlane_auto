@@ -1,1 +1,1 @@
-https://www.autocoder.cc/privacy
+{{PRIVACY_URL}}

@@ -62,15 +62,13 @@ check_required_env() {
 create_directory_structure() {
     log_info "创建 fastlane 目录结构..."
 
-    mkdir -p "$1"/ios/fastlane/certificates
-    mkdir -p "$1"/android/fastlane/certificates
-    mkdir -p "$1"/ios/fastlane/metadata
-    mkdir -p "$1"/android/fastlane/metadata
+    mkdir -p "$1"/ios/fastlane/
+    mkdir -p "$1"/android/fastlane/
 
-    cp -r fastlane_templates/certificates/* "$1"/ios/fastlane/certificates/*
-    cp -r fastlane_templates/certificates/* "$1"/android/fastlane/certificates/*
-    cp -r fastlane_templates/metadata/* "$1"/ios/fastlane/metadata/*
-    cp -r fastlane_templates/metadata/* "$1"/android/fastlane/metadata/*
+    cp -r fastlane_templates/certificates "$1"/ios/fastlane/
+    cp -r fastlane_templates/certificates "$1"/android/fastlane/
+    cp -r fastlane_templates/metadata "$1"/ios/fastlane/
+    cp -r fastlane_templates/metadata "$1"/android/fastlane/
 
     log_success "目录结构创建完成"
 }
@@ -82,7 +80,7 @@ replace_template_variables() {
 
     log_info "处理模板文件: $template_file -> $output_file"
 
-    if [ template_file != output_file ]; then
+    if [ "$template_file" != '' ]; then
         cp "$template_file" "$output_file"
     fi
 
@@ -133,21 +131,20 @@ generate_config_files() {
     replace_template_variables "fastlane_templates/Deliverfile.template" "$1/android/fastlane/Deliverfile"
     replace_template_variables "fastlane_templates/Appfile.template" "$1/android/fastlane/Appfile"
 
-    replace_template_variables "$1/android/fastlane/metadata/android/en-US/full_description.txt"
-    replace_template_variables "$1/android/fastlane/metadata/android/en-US/short_description.txt.txt"
-    replace_template_variables "$1/android/fastlane/metadata/android/en-US/title.txt"
-    replace_template_variables "$1/android/fastlane/metadata/android/zh-CN/full_description.txt"
-    replace_template_variables "$1/android/fastlane/metadata/android/zh-CN/short_description.txt.txt"
-    replace_template_variables "$1/android/fastlane/metadata/android/zh-CN/title.txt"
-    replace_template_variables "$1/android/fastlane/metadata/android/default/privacy_url.txt"
+    replace_template_variables "" "$1/android/fastlane/metadata/android/en-US/full_description.txt"
+    replace_template_variables "" "$1/android/fastlane/metadata/android/en-US/short_description.txt"
+    replace_template_variables "" "$1/android/fastlane/metadata/android/en-US/title.txt"
+    replace_template_variables "" "$1/android/fastlane/metadata/android/zh-CN/full_description.txt"
+    replace_template_variables "" "$1/android/fastlane/metadata/android/zh-CN/short_description.txt"
+    replace_template_variables "" "$1/android/fastlane/metadata/android/zh-CN/title.txt"
+    replace_template_variables "" "$1/android/fastlane/metadata/android/default/privacy_url.txt"
 
-    replace_template_variables "$1/android/fastlane/metadata/ios/en-US/full_description.txt"
-    replace_template_variables "$1/android/fastlane/metadata/ios/en-US/short_description.txt.txt"
-    replace_template_variables "$1/android/fastlane/metadata/ios/en-US/title.txt"
-    replace_template_variables "$1/android/fastlane/metadata/ios/zh-Hans/full_description.txt"
-    replace_template_variables "$1/android/fastlane/metadata/ios/zh-Hans/short_description.txt.txt"
-    replace_template_variables "$1/android/fastlane/metadata/ios/zh-Hans/title.txt"
-    replace_template_variables "$1/android/fastlane/metadata/ios/default/privacy_url.txt"
+    replace_template_variables "" "$1/ios/fastlane/metadata/ios/en-US/description.txt"
+    replace_template_variables "" "$1/ios/fastlane/metadata/ios/en-US/keywords.txt"
+    replace_template_variables "" "$1/ios/fastlane/metadata/ios/en-US/name.txt"
+    replace_template_variables "" "$1/ios/fastlane/metadata/ios/zh-Hans/description.txt"
+    replace_template_variables "" "$1/ios/fastlane/metadata/ios/zh-Hans/keywords.txt"
+    replace_template_variables "" "$1/ios/fastlane/metadata/ios/zh-Hans/name.txt"
 
     log_success "配置文件生成完成"
 }
