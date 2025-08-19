@@ -103,13 +103,14 @@ jobs:
         if: steps.cache-android.outputs.cache-hit != 'true'
         run: |          
           echo "Installing Android SDK and system image..."
-          sdkmanager "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+          yes | sdkmanager "platforms;android-30" "system-images;android-30;google_apis;arm64-v8a"
+
 
           echo "Accepting licenses..."
           yes | sdkmanager --licenses
           
           echo "Creating AVD..."
-          echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;x86_64" --device "pixel_5"
+          echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;arm64-v8a" --device "pixel_5"
         
       # 构建安卓，IOS源码
       - name: Build for iOS or Android
@@ -134,7 +135,7 @@ jobs:
         run: |
           cd ${{ github.event.inputs.appName }}/android
           ./fastlane/deploy_android.sh build_debug
-          ./fastlane/deploy_android.sh build_aab
+
 
       # 安卓截屏
       - name: android screengrab
