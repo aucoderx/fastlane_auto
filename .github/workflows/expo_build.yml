@@ -164,6 +164,8 @@ jobs:
               echo "app-debug-androidTest.apk not exists"
             fi
           else
+            cd ${{ github.event.inputs.appName }}/android
+            
             mkdir -p app/build/outputs/apk/debug
             mkdir -p app/build/outputs/apk/androidTest/debug
 
@@ -185,7 +187,7 @@ jobs:
           cd ${{ github.event.inputs.appName }}/android
 
           ls -lR app/build/outputs/apk/
-          
+
           if [ ! -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
             echo "app-debug.apk not exists"
           else
