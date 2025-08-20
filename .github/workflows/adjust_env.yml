@@ -10,54 +10,37 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-13
     timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
-        # 设置环境变量
+    
+      # 设置环境变量
       - name: env set
         run: |
             echo "/Users/runner/Library/Android/sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
             echo "/Users/runner/Library/Android/sdk/platform-tools" >> $GITHUB_PATH
-
-      # 缓存安装的安卓模拟器
-      - name: Cache Android SDK and Emulator
-        id: cache-android
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.android
-            ~/.cache
-            ~/.gradle
-            /Users/runner/Library/Android/sdk/system-images
-          key: android-emulator-${{ runner.os }}-android-30
-          restore-keys: |
-            android-emulator-${{ runner.os }}-
-
+      
       # 安装安装模拟器，用于截图
       - name: Install Android SDK and Emulator
-        # 如果上一步没有恢复缓存，则执行此步骤
-        if: steps.cache-android.outputs.cache-hit != 'true'
         run: |          
           echo "Installing Android SDK and system image..."
-          yes | sdkmanager "platforms;android-30" "system-images;android-30;google_apis;arm64-v8a"
+          yes | sdkmanager "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+
 
           echo "Accepting licenses..."
           yes | sdkmanager --licenses
           
           echo "Creating AVD..."
-          echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;arm64-v8a" --device "pixel_5"
+          echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;x86_64" --device "pixel_5"
+        
 
-      # 安卓截屏
+        # 安卓截屏
       - name: android start
-        env:
-          ANDROID_EMULATOR_FORCE_32BIT: true # 禁用HVF加速
-          ANDROID_EMULATOR_USE_HARDWARE_ACCELERATION: false
         if: ${{ github.event.inputs.environment == 'prod' }}
         run: |
-          /Users/runner/Library/Android/sdk/emulator/emulator -avd pixel_5 -no-window -no-audio -verbose & 
+          /Users/runner/Library/Android/sdk/emulator/emulator -avd pixel_5 -no-window -no-audio -gpu swiftshader_indirect -verbose -no-boot-anim & 
           echo "Waiting for the emulator to boot..."
           # 等待模拟器启动完成
           adb wait-for-device
@@ -65,16 +48,7 @@ jobs:
           echo "Emulator is ready. Performing actions..." 
           adb -s emulator-5554 emu kill
 
-      # 安卓截屏
-      - name: android start
-        env:
-          ANDROID_EMULATOR_FORCE_32BIT: true # 禁用HVF加速
-          ANDROID_EMULATOR_USE_HARDWARE_ACCELERATION: false
-        if: ${{ github.event.inputs.environment == 'test' }}
-        run: |
-          /Users/runner/Library/Android/sdk/emulator/emulator -avd pixel_5 -no-window -no-audio -verbose
-          adb -s emulator-5554 emu kill
-
       
        
+
 
