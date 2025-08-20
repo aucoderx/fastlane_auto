@@ -7,6 +7,7 @@ describe('Home Screen', () => {
       newInstance: true,
       permissions: { notifications: 'YES' } // Add if needed
     });
+    await new Promise(resolve => setTimeout(resolve, 60000)); // 等待60秒
     console.log("======================= launch app end ========================")
   });
 
@@ -29,7 +30,5 @@ describe('Home Screen', () => {
     // 点击 Tab Two
     await element(by.id('tab-two-button')).tap();
     await device.takeScreenshot(platform + '_tab-two');
-    // await expect(element(by.id('home-test-text'))).toHaveText('test text');
-    // await device.takeScreenshot(platform + '_home-test-text');
   });
 });

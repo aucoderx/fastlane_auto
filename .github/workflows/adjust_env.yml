@@ -34,7 +34,29 @@ jobs:
           
           echo "Creating AVD..."
           echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;x86_64" --device "pixel_5"
+
+      # 构建安卓的apk包，Abb包
+      - name: android build test
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
+        run: |
+            
+            mkdir -p app-demo/android
+            cd app-demo/android
+            
+            mkdir -p app/build/outputs/apk/debug
+            mkdir -p app/build/outputs/apk/androidTest/debug
+
+            TAG="v1.0.0-data"
+
+            gh release download $TAG --pattern 'app-debug.apk' --clobber
+            gh release download $TAG --pattern 'app-debug-androidTest.apk' --clobber
+
+            mv app-debug.apk app/build/outputs/apk/debug/app-debug.apk
+            mv app-debug-androidTest.apk app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            
+          
 
         # 安卓截屏
       - name: android start
@@ -48,7 +70,38 @@ jobs:
           echo "Emulator is ready. Performing actions..." 
           adb -s emulator-5554 emu kill
 
-      
+            
+          /Users/runner/Library/Android/sdk/emulator/emulator -avd pixel_5 -no-window -no-audio -gpu swiftshader_indirect -verbose -no-boot-anim & 
+          echo "Waiting for the emulator to boot..."
+          # 等待模拟器启动完成
+          adb wait-for-device
+
+          echo "⏳ Waiting for emulator to fully boot..."
+          boot_completed=""
+          while [[ "$boot_completed" != "1" ]]; do
+            boot_completed=$(adb -s emulator-5554 shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+            if [[ "$boot_completed" != "1" ]]; then
+              echo "   emulator not ready yet (sys.boot_completed=$boot_completed)"
+              sleep 5
+            fi
+          done
+          
+          adb install app/build/outputs/apk/debug/app-debug.apk
+          adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+          sleep 20
+
+          # 在启动测试前添加
+          echo "Checking if app is installed..."
+          adb -s emulator-5554 shell pm list packages | grep com.anonymous.genapp
+          
+          adb -s emulator-5554 shell monkey -p com.anonymous.genapp -c android.intent.category.LAUNCHER 1
+
+          echo "Checking app processes..."
+          adb -s emulator-5554 shell ps | grep com.anonymous.genapp || echo "App not running"
+
+          echo "Starting app manually..."
+          adb -s emulator-5554 shell am start -n com.anonymous.genapp/.MainActivity
        
 
 
