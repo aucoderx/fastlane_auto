@@ -23,6 +23,10 @@ on:
         description: 'app upload commend'
         required: false
         default: ''
+      testUserCacheAPK:
+        description: 'app upload commend'
+        required: false
+        default: 'false'
 
 jobs:
   build:
@@ -96,6 +100,17 @@ jobs:
           key: gradle-${{ runner.os }}-${{ github.event.inputs.environment }}
           restore-keys: |
             android-emulator-${{ runner.os }}-
+      
+      # 缓存安装的gradle
+      - name: Cache android output
+        id: cache-android-output
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.event.inputs.appName }}/app-demo/android/app/build/outputs
+          key: android-output-${{ runner.os }}-${{ github.event.inputs.environment }}
+          restore-keys: |
+            android-output-${{ runner.os }}-
 
       # 安装安装模拟器，用于截图
       - name: Install Android SDK and Emulator
@@ -129,19 +144,30 @@ jobs:
         run: |
           ./manage_fastlane.sh ${{ github.event.inputs.appName }}
 
-      # 构建安卓的IOS包，Abb包
-      - name: android build
-        if: ${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all' }}
+      # 构建安卓的IOS包，Abb包(prod)
+      - name: android build prod
+        if: (${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all' }}) && ${{ github.event.inputs.environment == 'prod' }}
         run: |
           cd ${{ github.event.inputs.appName }}/android
           ./fastlane/deploy_android.sh build_debug
-
+      
+      # 构建安卓的IOS包，Abb包
+      - name: android build test
+        if: (${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all' }}) && ${{ github.event.inputs.environment == 'test' }}
+        run: |
+          if [ "${{ github.event.inputs.testUserCacheAPK }}" == "false" ]; then
+            cd ${{ github.event.inputs.appName }}/android
+            ./fastlane/deploy_android.sh build_debug
+            if [ ! -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
+              echo "app-debug.apk not exists"
+            fi
+            if [ ! -f "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk" ]; then
+              echo "app-debug-androidTest.apk not exists"
+            fi
+          fi
 
       # 安卓截屏
       - name: android screengrab
-        env:
-          ANDROID_EMULATOR_FORCE_32BIT: true # 禁用HVF加速
-          ANDROID_EMULATOR_USE_HARDWARE_ACCELERATION: false
         if: ${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.needScreengrab == 'true' }}
         run: |
           cd ${{ github.event.inputs.appName }}/android
