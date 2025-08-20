@@ -107,7 +107,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ${{ github.event.inputs.appName }}/app-demo/android/app/build/outputs
+            ${{ github.event.inputs.appName }}/android/app/build/outputs
           key: android-output-${{ runner.os }}-${{ github.event.inputs.environment }}
           restore-keys: |
             android-output-${{ runner.os }}-
@@ -146,7 +146,7 @@ jobs:
 
       # 构建安卓的apk包，Abb包(prod)
       - name: android build prod
-        if: (${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all' }}) && ${{ github.event.inputs.environment == 'prod' }}
+        if: (${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.environment == 'prod' }})
         run: |
           cd ${{ github.event.inputs.appName }}/android
           ./fastlane/deploy_android.sh build_debug
@@ -159,7 +159,7 @@ jobs:
       
       # 构建安卓的apk包，Abb包
       - name: android build test
-        if: (${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all' }}) && ${{ github.event.inputs.environment == 'test' }}
+        if: (${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.environment == 'test' }})
         run: |
           if [ "${{ github.event.inputs.testUserCacheAPK }}" == "false" ]; then
             cd ${{ github.event.inputs.appName }}/android
@@ -181,6 +181,17 @@ jobs:
           echo "Waiting for the emulator to boot..."
           # 等待模拟器启动完成
           adb wait-for-device
+          
+          echo "⏳ Waiting for emulator to fully boot..."
+          boot_completed=""
+          while [[ "$boot_completed" != "1" ]]; do
+            boot_completed=$(adb -s emulator-5554 shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+            if [[ "$boot_completed" != "1" ]]; then
+              echo "   emulator not ready yet (sys.boot_completed=$boot_completed)"
+              sleep 5
+            fi
+          done
+
           ./fastlane/deploy_android.sh screengrab
           adb -s emulator-5554 emu kill
 
