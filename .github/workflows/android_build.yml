@@ -134,13 +134,17 @@ jobs:
                     
                     ls -lR app/build/outputs/apk/
                 fi
-
+            
+ 
             - name: Run Detox tests
               uses: reactivecircus/android-emulator-runner@v2
               with:
-                api-level: 31
+                api-level: 30
                 arch: x86_64
-                avd-name: Android_API31
+                    # 添加磁盘空间配置
+                disk-size: 4096M
+                heap-size: 1024M
+                avd-name: Android_API30
                 force-avd-creation: false
                 emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
                 disable-animations: false
