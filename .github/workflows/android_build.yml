@@ -7,10 +7,6 @@ on:
         description: 'Choose environment (prod or test)'
         required: true
         default: 'test'
-      platform:
-        description: 'Choose platform (ios or android)'
-        required: true
-        default: 'all'
       appName:
         description: 'app name'
         required: true
@@ -83,17 +79,11 @@ jobs:
                 npm install
 
 
-            # 构建安卓，IOS源码
-            - name: Build for iOS or Android
+            # 构建安卓源码
+            - name: Build for or Android
               run: |
                 cd ${{ github.event.inputs.appName }}
-                if [ "${{ github.event.inputs.platform }}" == "ios" ]; then
-                    npx expo prebuild --platform ios
-                elif [ "${{ github.event.inputs.platform }}" == "android" ]; then
-                    npx expo prebuild --platform android
-                elif [ "${{ github.event.inputs.platform }}" == "all" ]; then
-                    npx expo prebuild
-                fi
+                npx expo prebuild --platform android
 
             # 执行fastlane配置脚本
             - name: exec manage_fastlane.sh
@@ -102,7 +92,7 @@ jobs:
 
             # 构建安卓的apk包，Abb包(prod)
             - name: android build prod
-              if: ${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.environment == 'prod' }}
+              if: ${{ github.event.inputs.environment == 'prod' }}
               run: |
                 cd ${{ github.event.inputs.appName }}/android
                 ./fastlane/deploy_android.sh build_debug
@@ -117,7 +107,7 @@ jobs:
             - name: android build test
               env:
                 GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              if: ${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.environment == 'test' }}
+              if: ${{ github.event.inputs.environment == 'test' }}
               run: |
                 if [ "${{ github.event.inputs.testUserCacheAPK }}" == "false" ]; then
                     cd ${{ github.event.inputs.appName }}/android

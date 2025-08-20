@@ -192,8 +192,8 @@ create_deployment_scripts() {
     cp "fastlane_templates/deploy_android.sh" "$1/android/fastlane/deploy_android.sh"
     cp "fastlane_templates/deploy_ios.sh" "$1/ios/fastlane/deploy_ios.sh"
 
-    cp "fastlane_templates/GemFile_android" "$1/android/GemFile"
-    cp "fastlane_templates/GemFile_ios" "$1/ios/GemFile"
+    cp "fastlane_templates/GemFile_android" "$1/android/Gemfile"
+    cp "fastlane_templates/GemFile_ios" "$1/ios/Gemfile"
 
     chmod +x "$1/android/fastlane/deploy_android.sh" "$1/ios/fastlane/deploy_ios.sh"
     log_success "部署脚本创建完成"
@@ -253,6 +253,9 @@ install_fastlane() {
 
         # 创建 Gemfile（如果不存在）
         pushd "$platform_dir" > /dev/null
+
+        pwd
+        ls
 
         # 安装依赖到 vendor/bundle
         bundle config set --local path 'vendor/bundle'
