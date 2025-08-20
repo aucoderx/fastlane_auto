@@ -52,7 +52,7 @@ module.exports = {
     emulator: {
       type: 'android.emulator',
       device: {
-        avdName: 'pixel_5'
+        avdName: 'Android_API30'
       },
       bootArgs: "-no-window -no-snapshot -no-audio -no-boot-anim",
     }
