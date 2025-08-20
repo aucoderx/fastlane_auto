@@ -7,7 +7,7 @@ describe('Home Screen', () => {
       newInstance: true,
       permissions: { notifications: 'YES' } // Add if needed
     });
-    await new Promise(resolve => setTimeout(resolve, 60000)); // 等待60秒
+    await new Promise(resolve => setTimeout(resolve, 600000)); // 等待60秒
     console.log("======================= launch app end ========================")
   });
 
