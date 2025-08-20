@@ -7,9 +7,9 @@ describe('Home Screen', () => {
       newInstance: true,
       permissions: { notifications: 'YES' } // Add if needed
     });
-    await new Promise(resolve => setTimeout(resolve, 600000)); // 等待60秒
+    await new Promise(resolve => setTimeout(resolve, 600000)); // 等待600秒
     console.log("======================= launch app end ========================")
-  });
+  }, 600000);
 
   it('should display the Home screen with title and content', async () => {
     const platform = device.getPlatform();
