@@ -26,7 +26,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-13
     timeout-minutes: 60
     steps:
       # 拉取配置代码
@@ -103,14 +103,14 @@ jobs:
         if: steps.cache-android.outputs.cache-hit != 'true'
         run: |          
           echo "Installing Android SDK and system image..."
-          yes | sdkmanager "platforms;android-30" "system-images;android-30;google_apis;arm64-v8a"
+          yes | sdkmanager "platforms;android-30" "system-images;android-30;google_apis;x86_64"
 
 
           echo "Accepting licenses..."
           yes | sdkmanager --licenses
           
           echo "Creating AVD..."
-          echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;arm64-v8a" --device "pixel_5"
+          echo "no" | avdmanager create avd -n pixel_5 -k "system-images;android-30;google_apis;x86_64" --device "pixel_5"
         
       # 构建安卓，IOS源码
       - name: Build for iOS or Android
