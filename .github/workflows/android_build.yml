@@ -142,10 +142,11 @@ jobs:
                 api-level: 30
                 arch: x86_64
                     # 添加磁盘空间配置
-                disk-size: 4096M
-                heap-size: 1024M
+                disk-size: 6144M  # 增加磁盘空间
+                heap-size: 2048M  # 增加堆内存
+                ram-size: 4096M   # 增加RAM
                 avd-name: Android_API30
                 force-avd-creation: false
                 emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
-                disable-animations: false
+                disable-animations: true
                 script: cd ${{ github.event.inputs.appName }}/android && ./fastlane/deploy_android.sh screengrab
