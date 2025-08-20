@@ -145,7 +145,12 @@ jobs:
         if: ${{ (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all') && github.event.inputs.needScreengrab == 'true' }}
         run: |
           cd ${{ github.event.inputs.appName }}/android
+          /Users/runner/Library/Android/sdk/emulator/emulator -avd pixel_5 -no-window -no-audio -gpu swiftshader_indirect -verbose -no-boot-anim & 
+          echo "Waiting for the emulator to boot..."
+          # 等待模拟器启动完成
+          adb wait-for-device
           ./fastlane/deploy_android.sh screengrab
+          adb -s emulator-5554 emu kill
 
       # 安卓上传应用市场
       - name: android appUpload

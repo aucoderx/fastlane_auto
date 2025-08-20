@@ -46,13 +46,15 @@ module.exports = {
       type: 'android.attached',
       device: {
         adbName: '.*'
-      }
+      },
+      bootArgs: "-no-window -no-snapshot -no-audio -no-boot-anim",
     },
     emulator: {
       type: 'android.emulator',
       device: {
         avdName: 'pixel_5'
-      }
+      },
+      bootArgs: "-no-window -no-snapshot -no-audio -no-boot-anim",
     }
   },
   configurations: {
@@ -74,11 +76,13 @@ module.exports = {
     },
     'android.emu.debug': {
       device: 'emulator',
-      app: 'android.debug'
+      app: 'android.debug',
+      bootArgs: "-no-window -no-snapshot -no-audio -no-boot-anim",
     },
     'android.emu.release': {
       device: 'emulator',
-      app: 'android.release'
+      app: 'android.release',
+      bootArgs: "-no-window -no-snapshot -no-audio -no-boot-anim",
     }
   }
 };
