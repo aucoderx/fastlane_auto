@@ -50,6 +50,12 @@ jobs:
                 cache: 'npm'
                 cache-dependency-path: './${{ github.event.inputs.appName }}/package-lock.json'
 
+            - name: Set up Ruby
+              uses: ruby/setup-ruby@v1
+              with:
+                ruby-version: '3.4.5'
+                bundler-cache: true # 这是一个重要的优化！
+
             - name: Setup Java
               uses: actions/setup-java@v4
               with:
