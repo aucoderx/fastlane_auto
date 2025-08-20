@@ -102,6 +102,7 @@ platform :android do
 
   desc "Run detox tests and collect screenshots"
   lane :e2e_screenshots do
+    sh("cd ../.. && npx detox build --configuration android.emu.debug")
     sh("cd ../.. && npx detox test --configuration android.emu.debug --loglevel trace")
     
     sh("mkdir -p metadata/en-US/images/phoneScreenshots")
