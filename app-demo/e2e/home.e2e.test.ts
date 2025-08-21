@@ -7,7 +7,7 @@ describe('Home Screen', () => {
       newInstance: true,
       permissions: { notifications: 'YES' } // Add if needed
     });
-    await new Promise(resolve => setTimeout(resolve, 600000)); // 等待600秒
+    await waitFor(element(by.id('homeScreen'))).toBeVisible().withTimeout(600000);
     console.log("======================= launch app end ========================")
   });
 
