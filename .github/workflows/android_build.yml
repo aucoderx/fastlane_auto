@@ -167,3 +167,26 @@ jobs:
                     # Additional wait for package manager
                     timeout 300 bash -c 'until adb shell pm list packages > /dev/null 2>&1; do sleep 5; done'
                     cd ${{ github.event.inputs.appName }}/android && ./fastlane/deploy_android.sh screengrab
+          
+        # 在你的 workflow 文件中，在 Detox 测试步骤之后添加这个步骤
+
+            - name: Upload Screenshots and Logs
+              if: always()  
+              uses: actions/upload-artifact@v4
+              with:
+                name: detox-debug-artifacts
+                path: |
+                  ${{ github.event.inputs.appName }}/artifacts/**/*.png
+                  ${{ github.event.inputs.appName }}/detox_*.log
+                  ${{ github.event.inputs.appName }}/metro.log
+                retention-days: 7
+          
+        # 还可以添加一个步骤来显示截图信息
+            - name: List Generated Screenshots
+              if: always()
+              run: |
+                echo "=== Generated Screenshots ==="
+                find ${{ github.event.inputs.appName }} -name "*.png" -type f -exec ls -la {} \; || echo "No screenshots found"
+                
+                echo "=== Detox Artifacts Directory ==="
+                ls -la ${{ github.event.inputs.appName }}/artifacts/ || echo "No artifacts directory"

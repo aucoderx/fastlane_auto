@@ -165,7 +165,7 @@ jobs:
             fi
           else
             cd ${{ github.event.inputs.appName }}/android
-            
+
             mkdir -p app/build/outputs/apk/debug
             mkdir -p app/build/outputs/apk/androidTest/debug
 
@@ -243,3 +243,4 @@ jobs:
         run: |
           cd ${{ github.event.inputs.appName }}/ios
           ./fastlane/deploy_ios.sh ${{github.event.inputs.appUploadCommend}}
+      
