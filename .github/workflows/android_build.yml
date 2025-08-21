@@ -143,8 +143,44 @@ jobs:
  
             - name: Start Metro server
               run: |
-                cd ${{ github.event.inputs.appName }} && npx react-native start --port 8081 > metro.log 2>&1 &
-                echo "Waiting 30s for Metro server to start..."
+                cd ${{ github.event.inputs.appName }}
+                echo "Starting Metro server..."
+                echo "Current directory: $(pwd)"
+                echo "Node version: $(node --version)"
+                echo "NPM version: $(npm --version)"
+                
+                # 启动 Metro 服务器并保存日志
+                npx react-native start --port 8081 > metro.log 2>&1 &
+                METRO_PID=$!
+                echo "Metro server started with PID: $METRO_PID"
+                echo "METRO_PID=$METRO_PID" >> $GITHUB_ENV
+                
+                # 等待 Metro 服务器启动
+                echo "Waiting for Metro server to be ready..."
+                for i in {1..60}; do
+                  if curl -f http://localhost:8081/status > /dev/null 2>&1; then
+                    echo "Metro server is ready after ${i} seconds"
+                    break
+                  fi
+                  echo "Attempt $i: Metro server not ready yet, waiting..."
+                  sleep 2
+                done
+                
+                # 检查 Metro 状态
+                if curl -f http://localhost:8081/status > /dev/null 2>&1; then
+                  echo "Metro server status check: SUCCESS"
+                  curl -s http://localhost:8081/status || echo "Could not get status details"
+                else
+                  echo "Metro server status check: FAILED"
+                  echo "=== Metro Log (last 50 lines) ==="
+                  tail -50 metro.log || echo "Could not read metro.log"
+                  echo "========================="
+                fi
+                
+                # 显示端口占用情况
+                echo "=== Port 8081 Status ==="
+                netstat -tlnp | grep :8081 || echo "Port 8081 not listening"
+                lsof -i :8081 || echo "No process found on port 8081"
 
             - name: Run Detox tests
               uses: reactivecircus/android-emulator-runner@v2
