@@ -9,9 +9,10 @@ describe('Home Screen', () => {
     });
     await new Promise(resolve => setTimeout(resolve, 600000)); // 等待600秒
     console.log("======================= launch app end ========================")
-  }, 600000);
+  });
 
   it('should display the Home screen with title and content', async () => {
+    console.log("enter should display the Home screen with title and content")
     const platform = device.getPlatform();
     await expect(element(by.id('index-page'))).toBeVisible();
     await device.takeScreenshot(platform + '_index-page');
