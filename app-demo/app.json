@@ -14,7 +14,7 @@
       "expo-font",
       "expo-web-browser",
       "@config-plugins/detox",
-
+      "./plugins/withDebuggableVariants.js",
       "./plugins/withAndroidSigning.js"
     ],
     "experiments": {
