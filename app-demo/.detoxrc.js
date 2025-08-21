@@ -28,9 +28,7 @@ module.exports = {
       reversePorts: [
         8081
       ],
-      launchArgs: {
-        detoxEnableSynchronization: 0
-      }
+      
     },
     'android.release': {
       type: 'android.apk',

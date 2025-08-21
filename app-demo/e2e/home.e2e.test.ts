@@ -7,7 +7,7 @@ describe('Home Screen', () => {
       newInstance: true,
       permissions: { notifications: 'YES' } // Add if needed
     });
-    await waitFor(element(by.id('homeScreen'))).toBeVisible().withTimeout(600000);
+    await waitFor(element(by.id('homeScreen'))).toBeVisible().withTimeout(180000);
     console.log("======================= launch app end ========================")
   });
 
