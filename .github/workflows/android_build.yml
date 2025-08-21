@@ -57,6 +57,11 @@ jobs:
               with:
                 distribution: zulu
                 java-version: 17
+            
+            - name: Install system dependencies
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y libpulse0
 
             # 线上环境，下载项目源码
             - name: Download Expo source (for prod environment)
@@ -149,4 +154,11 @@ jobs:
                 force-avd-creation: false
                 emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
                 disable-animations: true
-                script: cd ${{ github.event.inputs.appName }}/android && ./fastlane/deploy_android.sh screengrab
+                script: |
+                    # Wait for package manager to be ready
+                    adb wait-for-device
+                    adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
+                    adb shell 'while [[ -z $(getprop dev.bootcomplete) ]]; do sleep 1; done'
+                    # Additional wait for package manager
+                    timeout 300 bash -c 'until adb shell pm list packages > /dev/null 2>&1; do sleep 5; done'
+                    cd ${{ github.event.inputs.appName }}/android && ./fastlane/deploy_android.sh screengrab
