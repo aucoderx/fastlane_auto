@@ -142,7 +142,6 @@ jobs:
             
  
             - name: Start Metro server
-              working-directory: ${{ github.event.inputs.appName }}
               run: |
                 cd ${{ github.event.inputs.appName }} && npx react-native start --port 8081 > metro.log 2>&1 &
                 echo "Waiting 30s for Metro server to start..."
