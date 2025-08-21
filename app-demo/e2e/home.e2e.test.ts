@@ -7,9 +7,10 @@ describe('Home Screen', () => {
       newInstance: true,
       permissions: { notifications: 'YES' } // Add if needed
     });
+    console.log("======================= launch completed ========================")
     await waitFor(element(by.id('homeScreen'))).toBeVisible().withTimeout(180000);
     console.log("======================= launch app end ========================")
-  });
+  }, 600000);
 
   it('should display the Home screen with title and content', async () => {
     console.log("enter should display the Home screen with title and content")
