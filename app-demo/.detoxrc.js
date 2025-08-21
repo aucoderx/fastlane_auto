@@ -27,7 +27,10 @@ module.exports = {
       build: 'cd android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
       reversePorts: [
         8081
-      ]
+      ],
+      launchArgs: {
+        detoxEnableSynchronization: 0
+      }
     },
     'android.release': {
       type: 'android.apk',
