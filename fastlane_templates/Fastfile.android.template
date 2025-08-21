@@ -104,9 +104,6 @@ platform :android do
   lane :e2e_screenshots do
     sh("cd ../.. && npx detox build --configuration android.emu.debug")
     sh("cd ../.. && npx detox test --configuration android.emu.debug --detectOpenHandles --loglevel trace")
-    
-    sh("mkdir -p metadata/en-US/images/phoneScreenshots")
-    sh("mkdir -p metadata/zh-CN/images/phoneScreenshots")
 
     sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/en-US/images/phoneScreenshots/")
     sh("cd ../.. && cp artifacts/*/*/android_*.png android/fastlane/metadata/android/zh-CN/images/phoneScreenshots/")

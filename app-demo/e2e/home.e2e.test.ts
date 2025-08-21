@@ -3,6 +3,7 @@ import { device, element, by, expect } from 'detox';
 describe('Home Screen', () => {
   beforeAll(async () => {
     console.log("======================= launch app ========================")
+    await device.disableSynchronization();
     await device.launchApp({ 
       newInstance: true,
       permissions: { notifications: 'YES' } // Add if needed
