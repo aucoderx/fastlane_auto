@@ -141,6 +141,12 @@ jobs:
                 fi
             
  
+            - name: Start Metro server
+              working-directory: ${{ github.event.inputs.appName }}
+              run: |
+                cd ${{ github.event.inputs.appName }} && npx react-native start --port 8081 > metro.log 2>&1 &
+                echo "Waiting 30s for Metro server to start..."
+
             - name: Run Detox tests
               uses: reactivecircus/android-emulator-runner@v2
               with:
@@ -161,15 +167,4 @@ jobs:
                     adb shell 'while [[ -z $(getprop dev.bootcomplete) ]]; do sleep 1; done'
                     # Additional wait for package manager
                     timeout 300 bash -c 'until adb shell pm list packages > /dev/null 2>&1; do sleep 5; done'
-
-                    # 启动 Metro server（后台）
-                    cd ${{ github.event.inputs.appName }}
-                    npx react-native start --port 8081 > metro.log 2>&1 &
-
-                    # 给 Metro 一点时间启动
-                    sleep 30
-
-                    # 确保 adb 端口转发
-                    adb reverse tcp:8081 tcp:8081
-
-                    cd android && ./fastlane/deploy_android.sh screengrab
+                    cd ${{ github.event.inputs.appName }}/android && ./fastlane/deploy_android.sh screengrab
