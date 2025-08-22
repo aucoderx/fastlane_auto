@@ -11,6 +11,10 @@ on:
         description: 'app name'
         required: true
         default: 'app-demo'
+      needPackType:
+        description: 'need pack type'
+        required: true
+        default: 'apk,app'
       needScreengrab:
         description: 'need screengrab'
         required: true
@@ -50,7 +54,7 @@ jobs:
               uses: ruby/setup-ruby@v1
               with:
                 ruby-version: '3.4.5'
-                bundler-cache: true # 这是一个重要的优化！
+                bundler-cache: false 
 
             - name: Setup Java
               uses: actions/setup-java@v4
@@ -100,6 +104,14 @@ jobs:
               run: |
                 cd ${{ github.event.inputs.appName }}/android
                 ./fastlane/deploy_android.sh build_debug
+
+            # 安卓上传应用市场
+            - name: android appUpload
+              if: ${{ github.event.inputs.appUploadCommend != '' }}
+              run: |
+                cd ${{ github.event.inputs.appName }}/android
+                ./fastlane/deploy_android.sh ${{github.event.inputs.appUploadCommend}}
+
             
             # 构建安卓的apk包，Abb包
             - name: android build test
@@ -110,12 +122,6 @@ jobs:
                 if [ "${{ github.event.inputs.testUserCacheAPK }}" == "false" ]; then
                     cd ${{ github.event.inputs.appName }}/android
                     ./fastlane/deploy_android.sh build_debug
-                    if [ ! -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
-                    echo "app-debug.apk not exists"
-                    fi
-                    if [ ! -f "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk" ]; then
-                    echo "app-debug-androidTest.apk not exists"
-                    fi
                 else
                     cd ${{ github.event.inputs.appName }}/android
                     

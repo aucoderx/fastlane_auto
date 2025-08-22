@@ -31,7 +31,9 @@ jobs:
       - name: Upload build to S3
         continue-on-error: true
         run: |
-          aws s3 cp app-demo/assets/favicon.png s3://${{ env.BUCKET_NAME }}/ --recursive
+          # 上传文件夹带 --recursive
+          aws s3 cp app-demo/assets/favicon.png s3://${{ env.BUCKET_NAME }}/ 
+          
 
             
        
