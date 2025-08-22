@@ -2,10 +2,13 @@ import { device, element, by, expect } from 'detox';
 
 describe('Home Screen', () => {
   beforeAll(async () => {
+        // 立即截图看应用当前状态
+    console.log("Taking screenshot before app launch...");
+    await device.takeScreenshot('app-launch-state0');
     console.log("======================= launch app ========================")
     await device.launchApp({ 
       newInstance: true,
-      permissions: { notifications: 'YES' } // Add if needed
+      permissions: { notifications: 'YES' }, // Add if needed
     });
     console.log("======================= launch completed ========================")
     // 等待一下让应用完全加载
@@ -14,24 +17,6 @@ describe('Home Screen', () => {
     console.log("Taking screenshot after app launch...");
     await device.takeScreenshot('app-launch-state');
    
-     // 检查是否有错误信息显示
-    try {
-      // 常见的错误提示元素
-      await element(by.text('Wait')).tap();
-    } catch (error) {
-      console.log("No obvious error elements found. ", error);
-    }
-
-    await device.takeScreenshot('app-launch-state2');
-
-    try {
-      // 常见的错误提示元素
-      await device.pressBack();
-    } catch (error) {
-      console.log("No obvious error elements found 3. ", error);
-    }
-
-    await device.takeScreenshot('app-launch-state3');
     
     console.log("======================= launch app end ========================")
   }, 600000);

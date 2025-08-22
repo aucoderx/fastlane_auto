@@ -190,10 +190,10 @@ jobs:
                     # 添加磁盘空间配置
                 disk-size: 6144M  # 增加磁盘空间
                 heap-size: 2048M  # 增加堆内存
-                ram-size: 5120M   # 增加RAM
+                ram-size: 3072M   # 增加RAM
                 avd-name: Android_API30
                 force-avd-creation: false
-                emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
+                emulator-options: -no-snapshot-save -no-window -gpu off -no-audio -no-boot-anim -camera-back -no-skin -no-metrics
                 disable-animations: true
                 script: |
                     # Wait for package manager to be ready
