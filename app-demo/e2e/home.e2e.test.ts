@@ -24,22 +24,24 @@ describe('Home Screen', () => {
   it('should display the Home screen with title and content', async () => {
     console.log("enter should display the Home screen with title and content")
     const platform = device.getPlatform();
-    await expect(element(by.id('index-page'))).toBeVisible();
-    await device.takeScreenshot(platform + '_index-page');
+    await expect(element(by.id('tab-index'))).toBeVisible();
+    await device.takeScreenshot(platform + '_tab-index');
 
-    // 点击 Tabs 项
-    await element(by.id('drawer-toggle-container')).tap();
-    await device.takeScreenshot(platform + '_drawer-button');
 
-    await element(by.id('drawer-tabs')).tap();
+    await element(by.id('tab-card-list')).tap();
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    await device.takeScreenshot(platform + '_tab-card-list');
 
-    // 点击 Tab One
-    await element(by.id('tab-one-button')).tap();
-    await expect(element(by.id('tab-one'))).toBeVisible();
-    await device.takeScreenshot(platform + '_tab-one');
+
+    await element(by.id('tab-user-center')).tap();
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    await device.takeScreenshot(platform + '_tab-user-center');
 
     // 点击 Tab Two
-    await element(by.id('tab-two-button')).tap();
-    await device.takeScreenshot(platform + '_tab-two');
+    await element(by.id('tab-index')).tap();
+    await new Promise(resolve => setTimeout(resolve, 5000)); 
+    await element(by.id('news-item-0')).tap();
+    await new Promise(resolve => setTimeout(resolve, 5000)); 
+    await device.takeScreenshot(platform + '_news-item-detail');
   });
 });

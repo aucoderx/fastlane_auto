@@ -76,7 +76,6 @@ jobs:
               run: |
                 mkdir -p fastlane_templates/certificates/
                 echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane_templates/certificates/google-play-service-account.json
-
             
             - name: Npm install
               run: |
@@ -93,7 +92,7 @@ jobs:
             # 执行fastlane配置脚本
             - name: exec manage_fastlane.sh
               run: |
-                ./manage_fastlane.sh ${{ github.event.inputs.appName }}
+                ./manage_fastlane.sh ${{ github.event.inputs.appName }} android
 
             # 构建安卓的apk包，Abb包(prod)
             - name: android build prod
@@ -101,12 +100,6 @@ jobs:
               run: |
                 cd ${{ github.event.inputs.appName }}/android
                 ./fastlane/deploy_android.sh build_debug
-                if [ ! -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
-                    echo "app-debug.apk not exists"
-                fi
-                if [ ! -f "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk" ]; then
-                    echo "app-debug-androidTest.apk not exists"
-                fi
             
             # 构建安卓的apk包，Abb包
             - name: android build test
@@ -141,47 +134,6 @@ jobs:
                 fi
             
  
-            # - name: Start Metro server
-            #   run: |
-            #     cd ${{ github.event.inputs.appName }}
-            #     echo "Starting Metro server..."
-            #     echo "Current directory: $(pwd)"
-            #     echo "Node version: $(node --version)"
-            #     echo "NPM version: $(npm --version)"
-                
-            #     # 启动 Metro 服务器并保存日志
-            #     npx react-native start --port 8081 > metro.log 2>&1 &
-            #     METRO_PID=$!
-            #     echo "Metro server started with PID: $METRO_PID"
-            #     echo "METRO_PID=$METRO_PID" >> $GITHUB_ENV
-                
-            #     # 等待 Metro 服务器启动
-            #     echo "Waiting for Metro server to be ready..."
-            #     for i in {1..60}; do
-            #       if curl -f http://localhost:8081/status > /dev/null 2>&1; then
-            #         echo "Metro server is ready after ${i} seconds"
-            #         break
-            #       fi
-            #       echo "Attempt $i: Metro server not ready yet, waiting..."
-            #       sleep 2
-            #     done
-                
-            #     # 检查 Metro 状态
-            #     if curl -f http://localhost:8081/status > /dev/null 2>&1; then
-            #       echo "Metro server status check: SUCCESS"
-            #       curl -s http://localhost:8081/status || echo "Could not get status details"
-            #     else
-            #       echo "Metro server status check: FAILED"
-            #       echo "=== Metro Log (last 50 lines) ==="
-            #       tail -50 metro.log || echo "Could not read metro.log"
-            #       echo "========================="
-            #     fi
-                
-            #     # 显示端口占用情况
-            #     echo "=== Port 8081 Status ==="
-            #     netstat -tlnp | grep :8081 || echo "Port 8081 not listening"
-            #     lsof -i :8081 || echo "No process found on port 8081"
-
             - name: Run Detox tests
               uses: reactivecircus/android-emulator-runner@v2
               with:
@@ -213,16 +165,7 @@ jobs:
                 name: detox-debug-artifacts
                 path: |
                   ${{ github.event.inputs.appName }}/artifacts/**/*.png
-                  # ${{ github.event.inputs.appName }}/detox_*.log
-                  # ${{ github.event.inputs.appName }}/metro.log
+                  ${{ github.event.inputs.appName }}/android/fastlane/metadata/android
+                  ${{ github.event.inputs.appName }}/android/app/build/outputs/apk
                 retention-days: 7
-          
-        # 还可以添加一个步骤来显示截图信息
-            - name: List Generated Screenshots
-              if: always()
-              run: |
-                echo "=== Generated Screenshots ==="
-                find ${{ github.event.inputs.appName }} -name "*.png" -type f -exec ls -la {} \; || echo "No screenshots found"
-                
-                echo "=== Detox Artifacts Directory ==="
-                ls -la ${{ github.event.inputs.appName }}/artifacts/ || echo "No artifacts directory"
+        
