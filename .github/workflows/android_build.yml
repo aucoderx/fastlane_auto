@@ -149,7 +149,7 @@ jobs:
                 disk-size: 6144M
                 avd-name: Android_API29
                 force-avd-creation: false
-                emulator-options: -no-snapshot-save -no-window -gpu off -noaudio -no-boot-anim -camera-back none -no-skin -no-metrics
+                emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-skin -no-metrics
                 disable-animations: true
                 script: |
                     # Wait for package manager to be ready
@@ -158,6 +158,20 @@ jobs:
                     adb shell 'while [[ -z $(getprop dev.bootcomplete) ]]; do sleep 1; done'
                     # Additional wait for package manager
                     timeout 300 bash -c 'until adb shell pm list packages > /dev/null 2>&1; do sleep 5; done'
+
+                    adb shell wm size
+                    adb exec-out screencap -p > ${{ github.event.inputs.appName }}/debug/SystemUI1.png
+
+                    adb shell input tap 540 1100
+                    adb exec-out screencap -p > ${{ github.event.inputs.appName }}/debug/SystemUI-540-1100.png
+
+                    adb shell input tap 540 1150
+                    adb exec-out screencap -p > ${{ github.event.inputs.appName }}/debug/SystemUI-540-1150.png
+
+                    adb shell input tap 500 1150
+                    adb exec-out screencap -p > ${{ github.event.inputs.appName }}/debug/SystemUI-500-1150.png
+
+
                     cd ${{ github.event.inputs.appName }}/android && ./fastlane/deploy_android.sh screengrab
           
             # 安卓上传应用市场
@@ -174,8 +188,8 @@ jobs:
               with:
                 name: detox-debug-artifacts
                 path: |
+                  ${{ github.event.inputs.appName }}/debug
                   ${{ github.event.inputs.appName }}/artifacts/**/*.png
                   ${{ github.event.inputs.appName }}/android/fastlane/metadata/android
-                  ${{ github.event.inputs.appName }}/android/app/build/outputs/apk
                 retention-days: 5
         
