@@ -17,31 +17,21 @@ describe('Home Screen', () => {
      // 检查是否有错误信息显示
     try {
       // 常见的错误提示元素
-      const errorElements = [
-        by.text('Error'),
-        by.text('错误'),
-        by.text('Network Error'),
-        by.text('Failed to load'),
-        by.text('Something went wrong'),
-        by.text('Unable to connect'),
-        by.id('error-message'),
-        by.id('errorMessage'),
-        by.type('RCTRedBox'), // React Native 红屏错误
-      ];
-      
-      for (const errorElement of errorElements) {
-        try {
-          await expect(element(errorElement)).toBeVisible();
-          console.log(`Found error element: ${errorElement}`);
-          await device.takeScreenshot('error-found');
-          break;
-        } catch (e) {
-          // 继续检查下一个可能的错误元素
-        }
-      }
+      await element(by.text('Wait')).tap();
     } catch (error) {
       console.log("No obvious error elements found. ", error);
     }
+
+    await device.takeScreenshot('app-launch-state2');
+
+    try {
+      // 常见的错误提示元素
+      await device.pressBack();
+    } catch (error) {
+      console.log("No obvious error elements found 3. ", error);
+    }
+
+    await device.takeScreenshot('app-launch-state3');
     
     console.log("======================= launch app end ========================")
   }, 600000);
@@ -58,7 +48,7 @@ describe('Home Screen', () => {
 
     await element(by.id('drawer-tabs')).tap();
 
-        // 点击 Tab One
+    // 点击 Tab One
     await element(by.id('tab-one-button')).tap();
     await expect(element(by.id('tab-one'))).toBeVisible();
     await device.takeScreenshot(platform + '_tab-one');
