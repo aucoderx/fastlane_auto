@@ -26,6 +26,7 @@
     "@tamagui/animations-react-native": "^1.125.8",
     "@tamagui/font-inter": "^1.125.8",
     "@tamagui/react-native-media-driver": "^1.125.8",
+    "@tamagui/react-native-web-lite": "^1.132.15",
     "@tamagui/shorthands": "^1.125.8",
     "@tamagui/themes": "^1.125.8",
     "expo": "^53.0.20",
