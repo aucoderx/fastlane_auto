@@ -193,7 +193,7 @@ jobs:
                 ram-size: 3072M   # 增加RAM
                 avd-name: Android_API30
                 force-avd-creation: false
-                emulator-options: -no-snapshot-save -no-window -gpu off -no-audio -no-boot-anim -camera-back -no-skin -no-metrics
+                emulator-options: -no-snapshot-save -no-window -gpu off -no-audio -no-boot-anim -camera-back none -no-skin -no-metrics
                 disable-animations: true
                 script: |
                     # Wait for package manager to be ready
