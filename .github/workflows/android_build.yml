@@ -85,6 +85,7 @@ jobs:
 
             - name: Parse S3_SECRET
               id: parse
+              if: ${{ github.event.inputs.environment == 'test' }}
               run: |
                 # 使用管道避免写入文件系统
                 echo "AWS_ACCESS_KEY_ID=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_access_key_id')" >> $GITHUB_ENV

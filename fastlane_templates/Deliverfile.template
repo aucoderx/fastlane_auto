@@ -16,5 +16,5 @@ skip_screenshots(false)
 skip_binary_upload(false)
 
 # 元数据目录
-metadata_path("./fastlane/metadata/ios")
-screenshots_path("./fastlane/screenshots/ios")
+metadata_path("./fastlane/metadata")
+screenshots_path("./fastlane/screenshots")

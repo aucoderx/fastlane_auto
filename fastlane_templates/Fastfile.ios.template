@@ -59,8 +59,8 @@ platform :ios do
     sh("cd ../.. && npx detox build --configuration ios.sim.debug")
     sh("cd ../.. && npx detox test --configuration ios.sim.debug")
     
-    sh("cd ../.. && cp artifacts/*/*/ios_*.png ios/fastlane/metadata/en-US/images/phoneScreenshots/")
-    sh("cd ../.. && cp artifacts/*/*/ios_*.png ios/fastlane/metadata/zh-CN/images/phoneScreenshots/")
+    sh("cd ../.. && cp artifacts/*/*/iPhone*.png ios/fastlane/screenshots/en-US/")
+    sh("cd ../.. && cp artifacts/*/*/iPhone*.png ios/fastlane/screenshots/zh-Hans/")
 
     # 删除原目录下的图片
     sh("cd ../.. && rm -rf artifacts/*/*/ios_*.png")

@@ -80,6 +80,8 @@ create_ios_directory_structure() {
     mkdir -p "$project_name"/ios/fastlane/
     cp -r fastlane_templates/certificates "$project_name"/ios/fastlane/
     cp -r fastlane_templates/metadata "$project_name"/ios/fastlane/
+    cp -r fastlane_templates/screenshots "$project_name"/ios/fastlane/
+    rm -rf "$project_name"/ios/fastlane/android
 
     log_success "iOS 目录结构创建完成"
 }
@@ -176,6 +178,7 @@ generate_ios_config_files() {
     replace_template_variables "fastlane_templates/Appfile.template" "$project_name/ios/fastlane/Appfile"
     replace_template_variables "fastlane_templates/Gymfile.template" "$project_name/ios/fastlane/Gymfile"
     replace_template_variables "fastlane_templates/Deliverfile.template" "$project_name/ios/fastlane/Deliverfile"
+    replace_template_variables "fastlane_templates/Matchfile_template" "$project_name/ios/fastlane/Matchfile"
 
     # iOS 元数据文件
     replace_template_variables "" "$project_name/ios/fastlane/metadata/ios/en-US/description.txt"

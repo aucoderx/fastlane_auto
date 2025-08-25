@@ -1,0 +1,19 @@
+storage_mode("s3")
+
+s3_region("{{AWS_REGION}}")                          # bucket 所在区域
+s3_access_key("{{AWS_ACCESS_KEY_ID}}")
+s3_secret_access_key("{{AWS_SECRET_ACCESS_KEY}}")
+s3_bucket("{{BUCKET_NAME}}")
+
+# 存放在 bucket 下的指定目录，比如 ios/certs/
+s3_object_prefix("{{PROJECT_NAME}}/certs/")
+
+type("appstore") # The default type, can be: appstore, adhoc, enterprise or development
+
+# app_identifier(["tools.fastlane.app", "tools.fastlane.app2"])
+# username("user@fastlane.tools") # Your Apple Developer Portal username
+
+# For all available options run `fastlane match --help`
+# Remove the # in the beginning of the line to enable the other options
+
+# The docs are available on https://docs.fastlane.tools/actions/match
