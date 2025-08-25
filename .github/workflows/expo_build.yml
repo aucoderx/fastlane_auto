@@ -61,6 +61,9 @@ jobs:
         run: |
           cd ${{ github.event.inputs.appName }}
           npm install        
+
+      - name: Install applesimutils
+        run: brew tap wix/brew && brew install applesimutils
         
       # 构建IOS源码
       - name: Build for iOS
