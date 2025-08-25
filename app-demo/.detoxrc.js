@@ -13,7 +13,7 @@ module.exports = {
     'ios.debug': {
       type: 'ios.app',
       binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/genapp.app',
-      build: 'xcodebuild BUNDLE_REACT_NATIVE=1 -workspace ios/genapp.xcworkspace -scheme genapp -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build'
+      build: 'xcodebuild -workspace ios/genapp.xcworkspace -scheme genapp -configuration Release -sdk iphonesimulator -derivedDataPath ios/build'
     },
     'ios.release': {
       type: 'ios.app',
