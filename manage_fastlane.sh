@@ -181,12 +181,12 @@ generate_ios_config_files() {
     replace_template_variables "fastlane_templates/Matchfile_template" "$project_name/ios/fastlane/Matchfile"
 
     # iOS 元数据文件
-    replace_template_variables "" "$project_name/ios/fastlane/metadata/ios/en-US/description.txt"
-    replace_template_variables "" "$project_name/ios/fastlane/metadata/ios/en-US/keywords.txt"
-    replace_template_variables "" "$project_name/ios/fastlane/metadata/ios/en-US/name.txt"
-    replace_template_variables "" "$project_name/ios/fastlane/metadata/ios/zh-Hans/description.txt"
-    replace_template_variables "" "$project_name/ios/fastlane/metadata/ios/zh-Hans/keywords.txt"
-    replace_template_variables "" "$project_name/ios/fastlane/metadata/ios/zh-Hans/name.txt"
+    replace_template_variables "" "$project_name/ios/fastlane/metadata/en-US/description.txt"
+    replace_template_variables "" "$project_name/ios/fastlane/metadata/en-US/keywords.txt"
+    replace_template_variables "" "$project_name/ios/fastlane/metadata/en-US/name.txt"
+    replace_template_variables "" "$project_name/ios/fastlane/metadata/zh-Hans/description.txt"
+    replace_template_variables "" "$project_name/ios/fastlane/metadata/zh-Hans/keywords.txt"
+    replace_template_variables "" "$project_name/ios/fastlane/metadata/zh-Hans/name.txt"
 
     log_success "iOS 配置文件生成完成"
 }

@@ -36,7 +36,7 @@ jobs:
         if: ${{ github.event.inputs.environment == 'test' }}
         run: |
           # 使用管道避免写入文件系统
-          env_file="fastlane_templates/.env"
+          ENV_FILE="fastlane_templates/.env"
 
           echo "AWS_ACCESS_KEY_ID=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_access_key_id')" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_secret_access_key')" >> $GITHUB_ENV
@@ -107,4 +107,14 @@ jobs:
         run: |
           cd ${{ github.event.inputs.appName }}/ios
           ./fastlane/deploy_ios.sh ${{github.event.inputs.appUploadCommend}}
+
+      - name: Upload Screenshots and Logs
+        if: always()  
+        uses: actions/upload-artifact@v4
+        with:
+          name: detox-debug-artifacts
+          path: |
+            ${{ github.event.inputs.appName }}/artifacts/**/*.png
+            ${{ github.event.inputs.appName }}/android/fastlane/screenshots
+          retention-days: 5
       
