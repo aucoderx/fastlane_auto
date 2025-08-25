@@ -59,8 +59,6 @@ platform :ios do
     sh("cd ../.. && detox build --configuration ios.sim.debug")
     sh("cd ../.. && detox test --configuration ios.sim.debug")
     
-    sh("mkdir -p metadata/en-US/images/phoneScreenshots")
-    sh("mkdir -p metadata/zh-CN/images/phoneScreenshots")
     sh("cd ../.. && cp artifacts/*/*/ios_*.png ios/fastlane/metadata/en-US/images/phoneScreenshots/")
     sh("cd ../.. && cp artifacts/*/*/ios_*.png ios/fastlane/metadata/zh-CN/images/phoneScreenshots/")
 

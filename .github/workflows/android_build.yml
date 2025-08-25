@@ -81,6 +81,23 @@ jobs:
               run: |
                 mkdir -p fastlane_templates/certificates/
                 echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane_templates/certificates/google-play-service-account.json
+
+
+            - name: Parse S3_SECRET
+              id: parse
+              run: |
+                # 使用管道避免写入文件系统
+                echo "AWS_ACCESS_KEY_ID=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_access_key_id')" >> $GITHUB_ENV
+                echo "AWS_SECRET_ACCESS_KEY=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_secret_access_key')" >> $GITHUB_ENV
+                echo "AWS_REGION=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.region_name')" >> $GITHUB_ENV
+                echo "BUCKET_NAME=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.bucket_name')" >> $GITHUB_ENV
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ env.AWS_REGION }}
             
             - name: Npm install
               run: |
@@ -203,4 +220,36 @@ jobs:
                   ${{ github.event.inputs.appName }}/artifacts/**/*.png
                   ${{ github.event.inputs.appName }}/android/fastlane/metadata/android
                 retention-days: 5
+
+            - name: Upload build to S3
+              continue-on-error: true
+              run: |
+                # 上传文件夹带 --recursive
+                APP_NAME="${{ github.event.inputs.appName }}"
+
+                APK_PATH="$APP_NAME/android/app/build/outputs/apk/debug/app-debug.apk"
+                AAB_PATH="$APP_NAME/android/app/build/outputs/bundle/release/app-release.aab"
+                SCREENSHOT_DIR="$APP_NAME/android/fastlane/metadata/android/zh-CN/images/phoneScreenshots"
+
+                echo "Checking files for app: $APP_NAME"
+
+                # 上传 APK
+                if [ -f "$APK_PATH" ]; then
+                  echo "Uploading $APK_PATH to s3://${{ env.BUCKET_NAME }}/$APP_NAME/"
+                  aws s3 cp "$APK_PATH" "s3://${{ env.BUCKET_NAME }}/$APP_NAME/"
+                fi
+
+                # 上传 AAB
+                if [ -f "$AAB_PATH" ]; then
+                  echo "Uploading $AAB_PATH to s3://${{ env.BUCKET_NAME }}/$APP_NAME/"
+                  aws s3 cp "$AAB_PATH" "s3://${{ env.BUCKET_NAME }}/$APP_NAME/"
+                fi
+
+                # 上传截图文件夹
+                if [ -d "$SCREENSHOT_DIR" ]; then
+                  if [ "$(ls -A "$SCREENSHOT_DIR")" ]; then
+                    echo "Uploading screenshots from $SCREENSHOT_DIR to s3://${{ env.BUCKET_NAME }}/$APP_NAME/phoneScreenshots/"
+                    aws s3 cp "$SCREENSHOT_DIR" "s3://${{ env.BUCKET_NAME }}/$APP_NAME/phoneScreenshots/" --recursive
+                  fi
+                fi
         

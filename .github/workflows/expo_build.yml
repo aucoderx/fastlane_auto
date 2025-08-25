@@ -1,4 +1,4 @@
-name: Expo Build and Deploy
+name: Expo IOS Build and Deploy
 
 on:
   workflow_dispatch:
@@ -7,10 +7,6 @@ on:
         description: 'Choose environment (prod or test)'
         required: true
         default: 'test'
-      platform:
-        description: 'Choose platform (ios or android)'
-        required: true
-        default: 'all'
       appName:
         description: 'app name'
         required: true
@@ -23,10 +19,6 @@ on:
         description: 'app upload commend'
         required: false
         default: ''
-      testUserCacheAPK:
-        description: 'app upload commend'
-        required: false
-        default: 'false'
 
 jobs:
   build:
@@ -86,21 +78,20 @@ jobs:
     
       # IOS包构建
       - name: ios build
-        if: ${{ github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all' }}
         run: |
           cd ${{ github.event.inputs.appName }}/ios
           ./fastlane/deploy_ios.sh build_only
       
       #IOS 截屏
       - name: ios screengrab
-        if: ${{ (github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all') && github.event.inputs.needScreengrab == 'true' }}
+        if: ${{ github.event.inputs.needScreengrab == 'true' }}
         run: |
           cd ${{ github.event.inputs.appName }}/ios
           ./fastlane/deploy_ios.sh screengrab
 
       # IOS 上传
       - name: ios appUpload
-        if: ${{ (github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all') && github.event.inputs.appUploadCommend != '' }}
+        if: ${{ github.event.inputs.appUploadCommend != '' }}
         run: |
           cd ${{ github.event.inputs.appName }}/ios
           ./fastlane/deploy_ios.sh ${{github.event.inputs.appUploadCommend}}
