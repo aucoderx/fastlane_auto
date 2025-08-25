@@ -23,4 +23,7 @@ jobs:
             echo "/Users/runner/Library/Android/sdk/platform-tools" >> $GITHUB_PATH
       
       - name: Show available simulators
-        run: xcrun simctl list devices
+        run: |
+          xcrun simctl list devices
+          echo "===================="
+          xcrun simctl list runtimes
