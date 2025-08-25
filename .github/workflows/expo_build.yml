@@ -68,6 +68,7 @@ jobs:
       # 构建IOS源码
       - name: Build for iOS
         run: |
+          cd ${{ github.event.inputs.appName }}
           npx expo prebuild --platform ios
          
 
@@ -80,7 +81,7 @@ jobs:
       - name: ios build
         run: |
           cd ${{ github.event.inputs.appName }}/ios
-          ./fastlane/deploy_ios.sh build_only
+          #./fastlane/deploy_ios.sh build_only
       
       #IOS 截屏
       - name: ios screengrab
