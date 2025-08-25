@@ -14,7 +14,7 @@ on:
       needPackType:
         description: 'need pack type'
         required: true
-        default: 'apk,app'
+        default: 'apk,aab'
       needScreengrab:
         description: 'need screengrab'
         required: true
@@ -38,8 +38,6 @@ jobs:
             contents: read
         env:
           NODE_ENV: development
-          DEBUG: tamagui
-
         steps:
             - name: Checkout Code
               uses: actions/checkout@v4
@@ -108,7 +106,19 @@ jobs:
               if: ${{ github.event.inputs.environment == 'prod' }}
               run: |
                 cd ${{ github.event.inputs.appName }}/android
-                ./fastlane/deploy_android.sh build_debug
+                NEED_PACK_TYPE="${{ github.event.inputs.needPackType }}"
+                NEED_SCREEN_GRAB="${{ github.event.inputs.needScreengrab }}"
+
+                if [[ "$NEED_PACK_TYPE" == *"apk"* ]] || [[ "$NEED_SCREEN_GRAB" == "true" ]]; then
+                  echo "Building APK..."
+                  ./fastlane/deploy_android.sh build_debug
+                fi
+
+                if [[ "$NEED_PACK_TYPE" == *"aab"* ]]; then
+                  echo "Building AAB..."
+                  ./fastlane/deploy_android.sh build_aab
+                fi
+                
             
             # 构建安卓的apk包，Abb包
             - name: android build test
@@ -160,6 +170,7 @@ jobs:
                     timeout 300 bash -c 'until adb shell pm list packages > /dev/null 2>&1; do sleep 5; done'
 
                     adb shell wm size
+                    mkdir -p ${{ github.event.inputs.appName }}/debug
                     adb exec-out screencap -p > ${{ github.event.inputs.appName }}/debug/SystemUI1.png
 
                     adb shell input tap 540 1100
