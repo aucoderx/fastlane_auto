@@ -19,7 +19,7 @@ on:
         description: 'need screengrab'
         required: true
         default: 'true'
-      appUploadCommend:
+      appUploadCommand:
         description: 'app upload command'
         required: false
         default: ''
@@ -27,6 +27,10 @@ on:
         description: 'use test apk'
         required: false
         default: 'false'
+      language:
+        description: 'app use language'
+        required: false
+        default: 'zh-Hans'
 
 jobs:
     
@@ -205,10 +209,10 @@ jobs:
           
             # 安卓上传应用市场
             - name: android appUpload
-              if: ${{ github.event.inputs.appUploadCommend != '' }}
+              if: ${{ github.event.inputs.appUploadCommand != '' }}
               run: |
                 cd ${{ github.event.inputs.appName }}/android
-                ./fastlane/deploy_android.sh ${{github.event.inputs.appUploadCommend}}
+                ./fastlane/deploy_android.sh ${{github.event.inputs.appUploadCommand}}
 
             
             - name: Upload Screenshots and Logs

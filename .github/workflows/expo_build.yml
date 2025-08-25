@@ -15,15 +15,27 @@ on:
         description: 'need screengrab'
         required: true
         default: 'true'
-      appUploadCommend:
+      isFirstRun:
+        description: 'is first run'
+        required: true
+        default: 'false'
+      needSaveMetadata:
+        description: 'need save metadata'
+        required: false
+        default: 'false'
+      appUploadCommand:
         description: 'app upload commend'
         required: false
-        default: ''
+        default: 'test_flight'
+      language:
+        description: 'app use language'
+        required: false
+        default: 'zh-Hans'
 
 jobs:
   build:
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 40
     permissions:
       contents: read
     steps:
@@ -93,6 +105,15 @@ jobs:
         run: |
           cd ${{ github.event.inputs.appName }}/ios
           #./fastlane/deploy_ios.sh build_only
+
+      # 下载证书并安装到钥匙链
+      - name: ios certificate
+        run: | 
+          if [ "${{ github.event.inputs.isFirstRun }}" == "true" ]; then
+            fastlane match appstore   
+          else
+            echo "=========="
+          fi
       
       #IOS 截屏
       - name: ios screengrab
@@ -103,10 +124,10 @@ jobs:
 
       # IOS 上传
       - name: ios appUpload
-        if: ${{ github.event.inputs.appUploadCommend != '' }}
+        if: ${{ github.event.inputs.appUploadCommand != '' }}
         run: |
           cd ${{ github.event.inputs.appName }}/ios
-          ./fastlane/deploy_ios.sh ${{github.event.inputs.appUploadCommend}}
+          ./fastlane/deploy_ios.sh ${{github.event.inputs.appUploadCommand}}
 
       - name: Upload Screenshots and Logs
         if: always()  

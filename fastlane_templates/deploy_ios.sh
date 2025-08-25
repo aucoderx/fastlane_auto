@@ -12,10 +12,6 @@ case $ACTION in
         echo "运行 iOS build_only..."
         bundle exec fastlane ios build_only
         ;;
-    beta)
-        echo "发布 iOS Beta 版本..."
-        bundle exec fastlane ios beta
-        ;;
     screengrab)
         echo "发布 iOS Beta 版本..."
         bundle exec fastlane ios e2e_screenshots
@@ -24,8 +20,12 @@ case $ACTION in
         echo "发布 iOS 正式版本..."
         bundle exec fastlane ios release
         ;;
+    test_flight)
+        echo "发布 iOS 正式版本..."
+        bundle exec fastlane ios test_flight
+        ;;
     *)
-        echo "用法: $0 {test|beta|release}"
+        echo "用法: $0 {test|build_only|screengrab|release|test_flight}"
         exit 1
         ;;
 esac
