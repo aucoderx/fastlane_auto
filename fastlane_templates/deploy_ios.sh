@@ -24,12 +24,8 @@ case $ACTION in
         echo "发布 iOS 正式版本..."
         bundle exec fastlane ios release
         ;;
-    certificates)
-        echo "更新 iOS 证书..."
-        bundle exec fastlane ios certificates
-        ;;
     *)
-        echo "用法: $0 {test|beta|release|certificates}"
+        echo "用法: $0 {test|beta|release}"
         exit 1
         ;;
 esac
