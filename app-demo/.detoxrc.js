@@ -13,12 +13,12 @@ module.exports = {
     'ios.debug': {
       type: 'ios.app',
       binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/genapp.app',
-      build: 'xcodebuild -workspace ios/genapp.xcworkspace -scheme genapp -configuration Release -sdk iphonesimulator -derivedDataPath ios/build'
+      build: 'xcodebuild -workspace ios/genapp.xcworkspace -scheme genapp -configuration Release -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4" -derivedDataPath ios/build'
     },
     'ios.release': {
       type: 'ios.app',
       binaryPath: 'ios/build/Build/Products/Release-iphonesimulator/genapp.app',
-      build: 'xcodebuild -workspace ios/genapp.xcworkspace -scheme genapp -configuration Release -sdk iphonesimulator -derivedDataPath ios/build'
+      build: 'xcodebuild -workspace ios/genapp.xcworkspace -scheme genapp -configuration Release -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4" -derivedDataPath ios/build'
     },
     'android.debug': {
       type: 'android.apk',
