@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { FlatList, RefreshControl, Dimensions, SafeAreaView, StatusBar } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,6 +27,10 @@ export default function ListScreen() {
   // 使用 context 中的搜索关键词
   const { searchKeyword } = useSearch();
 
+  // 防抖引用
+  const loadMoreRef = useRef(false);
+  const lastLoadMoreTime = useRef(0);
+
   // 根据搜索关键词过滤数据
   const filteredData = useMemo(() => {
     if (!searchKeyword.trim()) {
@@ -45,7 +49,9 @@ export default function ListScreen() {
     
     setCurrentChannel(channel);
     setPage(1);
+    
     setLoading(true);
+    loadMoreRef.current = false; // 重置加载状态
     
     // 模拟网络请求延迟
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -64,11 +70,19 @@ export default function ListScreen() {
     setData(generateMockListData(0, currentChannel));
     setPage(1);
     setRefreshing(false);
+    loadMoreRef.current = false; // 重置加载状态
   }, [currentChannel]);
 
-  // 加载更多数据
+  // 加载更多数据 - 添加防抖机制
   const loadMore = useCallback(async () => {
-    if (loading) return;
+    // 防抖检查：如果正在加载或距离上次加载时间太短，则跳过
+    if (loading || loadMoreRef.current) return;
+    
+    const now = Date.now();
+    if (now - lastLoadMoreTime.current < 500) return; // 500ms 防抖
+    
+    loadMoreRef.current = true;
+    lastLoadMoreTime.current = now;
     
     setLoading(true);
     // 模拟网络请求延迟
@@ -78,12 +92,21 @@ export default function ListScreen() {
     setData((prev: NewsItem[]) => [...prev, ...newData]);
     setPage((prev: number) => prev + 1);
     setLoading(false);
+    loadMoreRef.current = false;
   }, [page, loading, currentChannel]);
 
   // 下拉刷新处理
   const onRefresh = useCallback(async () => {
     await refreshChannelData();
   }, [refreshChannelData]);
+
+  // 处理 onEndReached - 添加额外检查
+  const handleEndReached = useCallback(() => {
+    // 只有在有数据且不在加载状态时才触发
+    if (filteredData.length > 0 && !loading && !loadMoreRef.current) {
+      loadMore();
+    }
+  }, [filteredData.length, loading, loadMore]);
 
   const renderChannelTabs = () => (
     <YStack
@@ -247,15 +270,15 @@ export default function ListScreen() {
         {renderChannelTabs()}
         
         {/* 列表内容 */}
-        {loading && page === 1 ? (
+        {loading && page === 1 && filteredData.length === 0 ? (
           renderChannelLoading()
         ) : (
           <FlatList
             data={filteredData}
             renderItem={renderItem}
             keyExtractor={(item) => item.id.toString()}
-            onEndReached={loadMore}
-            onEndReachedThreshold={0.1}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.3}
             ListFooterComponent={renderFooter}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

@@ -4,6 +4,7 @@ import { Stack, SplashScreen } from 'expo-router';
 import React, { useEffect } from 'react';
 import { TamaguiProvider } from 'tamagui';
 import { useFonts } from 'expo-font';
+import { SearchProvider } from '../contexts/SearchContext';
 
 import config from '../tamagui.config';
 
@@ -11,7 +12,7 @@ SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(drawer)',
+  initialRouteName: '(tabs)',
 };
 
 export default function RootLayout() {
@@ -30,12 +31,16 @@ export default function RootLayout() {
 
   return (
     <TamaguiProvider config={config}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack>
-          <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ title: 'Modal', presentation: 'modal' }} />
-        </Stack>
-      </GestureHandlerRootView>
+      <SearchProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(detail)" options={{ headerShown: false }} />
+            <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ title: 'Modal', presentation: 'modal' }} />
+          </Stack>
+        </GestureHandlerRootView>
+      </SearchProvider>
     </TamaguiProvider>
   );
 }
