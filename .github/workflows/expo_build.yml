@@ -30,12 +30,6 @@ jobs:
       # 拉取配置代码
       - name: Checkout code
         uses: actions/checkout@v3
-
-      # 设置node
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
       
       # 设置环境变量
       - name: env set
@@ -52,10 +46,10 @@ jobs:
       
   
       # 缓存 npm 安装结果，流程执行完的后续节点进行的缓存，如果流程执行失败，缓存会失败
-      - name: Setup Node.js and cache dependencies
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.2.0
           cache: 'npm'
           cache-dependency-path: './${{ github.event.inputs.appName }}/package-lock.json'
       
