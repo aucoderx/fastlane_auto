@@ -34,7 +34,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.gen-app"
+      "bundleIdentifier": "com.anonymous.genapp"
     },
     "android": {
       "versionCode": 100,

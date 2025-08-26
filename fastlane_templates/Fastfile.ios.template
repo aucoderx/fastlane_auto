@@ -113,9 +113,26 @@ platform :ios do
 
   lane :test_flight do
 
+    # 拉取证书和 Provisioning Profile（使用 match 管理）
+    match(
+      type: "appstore",       # 正式发布使用 App Store 类型证书
+      readonly: true           # CI/第三方开发者只拉取证书，不创建新证书
+    )
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "{{XCODEPROJ_PATH}}",
+      team_id: "{{TEAM_ID}}",
+      code_sign_identity: "Apple Distribution: WENQI KAN ({{TEAM_ID}})",
+      profile_name: "match AppStore {{BUNDLE_ID}}",
+      bundle_identifier: "{{BUNDLE_ID}}",
+      build_configurations: ["Release"]  # 只更新 Release 配置
+    )
+
     # 构建应用
     build_app(
       scheme: "{{SCHEME_NAME}}",
+      xcargs: "DEVELOPMENT_TEAM={{TEAM_ID}}"
     )
 
     api_key = app_store_connect_api_key(
@@ -137,6 +154,16 @@ platform :ios do
     match(
       type: "appstore",       # 正式发布使用 App Store 类型证书
       readonly: true           # CI/第三方开发者只拉取证书，不创建新证书
+    )
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "{{XCODEPROJ_PATH}}",
+      team_id: "{{TEAM_ID}}",
+      code_sign_identity: "Apple Distribution: WENQI KAN ({{TEAM_ID}})",
+      profile_name: "match AppStore {{BUNDLE_ID}}",
+      bundle_identifier: "{{BUNDLE_ID}}",
+      build_configurations: ["Release"]  # 只更新 Release 配置
     )
 
     # 打包应用

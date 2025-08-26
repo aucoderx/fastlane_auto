@@ -110,9 +110,7 @@ jobs:
       - name: ios certificate
         run: | 
           if [ "${{ github.event.inputs.isFirstRun }}" == "true" ]; then
-            fastlane match appstore   
-          else
-            echo "=========="
+            MATCH_PASSWORD="autocoder.cc123" fastlane match appstore   
           fi
       
       #IOS 截屏
