@@ -1,6 +1,11 @@
 default_platform(:ios)
 
 platform :ios do
+
+  before_all do
+    setup_ci # This will set up the CI environment for Fastlane
+  end
+
   desc "构建并生成截图"
   lane :build_and_screenshot do
     # 清理构建目录
