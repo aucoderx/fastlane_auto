@@ -128,7 +128,9 @@ replace_template_variables() {
         cp "$template_file" "$output_file"
     fi
 
+
     # 基本应用信息
+    sed -i.bak "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$output_file"
     sed -i.bak "s/{{APP_NAME}}/${APP_NAME}/g" "$output_file"
     sed -i.bak "s/{{BUNDLE_ID}}/${BUNDLE_ID}/g" "$output_file"
     sed -i.bak "s/{{ANDROID_PACKAGE_NAME}}/${ANDROID_PACKAGE_NAME}/g" "$output_file"
@@ -160,6 +162,13 @@ replace_template_variables() {
     sed -i.bak "s/{{AUTOMATIC_RELEASE}}/${AUTOMATIC_RELEASE:-false}/g" "$output_file"
     sed -i.bak "s/{{ITC_TEAM_ID}}/${ITC_TEAM_ID}/g" "$output_file"
     sed -i.bak "s/{{ITC_TEAM_NAME}}/${ITC_TEAM_NAME}/g" "$output_file"
+
+
+    sed -i.bak "s/{{AWS_ACCESS_KEY_ID}}/${AWS_ACCESS_KEY_ID}/g" "$output_file"
+    sed -i.bak "s#{{AWS_SECRET_ACCESS_KEY}}#${AWS_SECRET_ACCESS_KEY}#g" "$output_file"
+    sed -i.bak "s/{{AWS_REGION}}/${AWS_REGION}/g" "$output_file"
+    sed -i.bak "s/{{BUCKET_NAME}}/${BUCKET_NAME}/g" "$output_file"
+
 
     # 删除备份文件
     rm -f "${output_file}.bak"
