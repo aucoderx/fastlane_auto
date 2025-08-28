@@ -45,7 +45,6 @@ jobs:
       
       - name: Parse S3_SECRET
         id: parse
-        if: ${{ github.event.inputs.environment == 'test' }}
         run: |
           # 使用管道避免写入文件系统
           ENV_FILE="fastlane_templates/.env"
@@ -55,21 +54,39 @@ jobs:
           AWS_REG=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.region_name')
           BUCKET=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.bucket_name')
 
+          echo "AWS_ACCESS_KEY_ID=$AWS_ID" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$AWS_KEY" >> $GITHUB_ENV
+          echo "AWS_REGION=$AWS_REG" >> $GITHUB_ENV
+          echo "BUCKET_NAME=$BUCKET" >> $GITHUB_ENV
 
           sed -i '' "s|^AWS_ACCESS_KEY_ID=.*|AWS_ACCESS_KEY_ID='${AWS_ID}'|" $ENV_FILE
           sed -i '' "s|^AWS_SECRET_ACCESS_KEY=.*|AWS_SECRET_ACCESS_KEY='${AWS_KEY}'|" $ENV_FILE
           sed -i '' "s|^AWS_REGION=.*|AWS_REGION='${AWS_REG}'|" $ENV_FILE
           sed -i '' "s|^BUCKET_NAME=.*|BUCKET_NAME='${BUCKET}'|" $ENV_FILE
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Select Xcode 16.3
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
 
-            # 测试环境，恢复谷歌服务账号
+      # 测试环境，恢复IOS服务账号
       - name: deal test env
         if: ${{ github.event.inputs.environment == 'test' }}
         run: |
           mkdir -p fastlane_templates/certificates/
-          printf "%s" "${{ secrets.AUTHKEY_55A9Z23V8S }}" > fastlane_templates/certificates/AuthKey_55A9Z23V8S.p8
+          printf "%s" "${{ secrets.AUTHKEY_55A9Z23V8S }}" > fastlane_templates/certificates/AuthKey.p8
+
+      # 正式环境，从S3下载IOS认证
+      - name: deal prod env
+        if: ${{ github.event.inputs.environment == 'prod' }}
+        run: |
+          mkdir -p fastlane_templates/certificates/
+          aws s3 cp s3://${{ env.BUCKET_NAME }}/${{ github.event.inputs.appName }}/certificates/AuthKey.p8 fastlane_templates/certificates/AuthKey.p8
       
       # 线上环境，下载项目源码
       - name: Download Expo source (for prod environment)

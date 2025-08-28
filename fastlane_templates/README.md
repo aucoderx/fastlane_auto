@@ -23,7 +23,7 @@
         * 每一个项目需要启动一个 Metro Bundler 服务器，否则在模拟器无法打开APP。需要考虑将 Metro Bundler 服务器集成进APP
 
 
-## 证书
+## 安卓证书
 * 使用 genkeypair 生成。
 * alise name： KEY_ALIAS
 * store password： KEYSTORE_PASSWORD
@@ -32,6 +32,7 @@
 
 ## 模拟器
 * 需安装安卓SDK，使用 adb 进行管理，运行截屏前需启动模拟器。否则detox 会自动打开一个默认的模拟器。
+* detox 配置里指定了模拟器。
 
 ----
 
@@ -44,5 +45,6 @@
 ## 截屏
 
 ## 证书
+使用 fastlane match 管理，配置好p8文件后，从苹果官网下载保存到S3 项目目录下。
 
 ## 模拟器

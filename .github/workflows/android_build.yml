@@ -20,20 +20,15 @@ on:
         required: true
         default: 'true'
       appUploadCommand:
-        description: 'app upload command'
+        description: 'app upload command(internal|alpha|beta|release)'
         required: false
         default: ''
-      testUserCacheAPK:
-        description: 'use test apk'
-        required: false
-        default: 'false'
       language:
         description: 'app use language'
         required: false
         default: 'zh-Hans'
 
 jobs:
-    
     build-and-test-android:
         name: Android - Build and run Detox tests
         runs-on: ubuntu-latest
@@ -59,7 +54,7 @@ jobs:
               uses: ruby/setup-ruby@v1
               with:
                 ruby-version: '3.4.5'
-                bundler-cache: false 
+                bundler-cache: true 
 
             - name: Setup Java
               uses: actions/setup-java@v4
@@ -103,11 +98,40 @@ jobs:
                 aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
                 aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
                 aws-region: ${{ env.AWS_REGION }}
+
+
+            # 正式环境，从S3下载谷歌服务账号
+            - name: deal prod env
+              if: ${{ github.event.inputs.environment == 'prod' }}
+              run: |
+                mkdir -p fastlane_templates/certificates/
+                aws s3 cp s3://${{ env.BUCKET_NAME }}/${{ github.event.inputs.appName }}/certificates/google-play-service-account.json fastlane_templates/certificates/google-play-service-account.json
+
             
             - name: Npm install
               run: |
                 cd ${{ github.event.inputs.appName }}
                 npm install
+
+            - name: Cache Expo CLI
+              uses: actions/cache@v4
+              with:
+                path: ~/.expo
+                    # 由於 package.json 相同，使用 lock 檔案來決定 Expo 工具鏈的快取
+                key: ${{ runner.os }}-expo-${{ hashFiles(format('{0}/package-lock.json', github.event.inputs.appName)) }}
+                restore-keys: |
+                  ${{ runner.os }}-expo-
+            
+            - name: Cache Gradle dependencies
+              uses: actions/cache@v4
+              with:
+                path: |
+                  ~/.gradle/caches
+                  ~/.gradle/wrapper
+                      # key 保持不變，它會基於生成的 build.gradle 檔案，但 restore-keys 可以提供向下相容
+                key: ${{ runner.os }}-gradle-${{ hashFiles(format('{0}/android/gradle/wrapper/gradle-wrapper.properties', github.event.inputs.appName)) }}
+                restore-keys: |
+                  ${{ runner.os }}-gradle-
 
 
             # 构建安卓源码
@@ -123,9 +147,6 @@ jobs:
 
             # 构建安卓的apk包，Abb包(prod)
             - name: android build prod
-              env:
-                DEBUG: tamagui
-              if: ${{ github.event.inputs.environment == 'prod' }}
               run: |
                 cd ${{ github.event.inputs.appName }}/android
                 NEED_PACK_TYPE="${{ github.event.inputs.needPackType }}"
@@ -141,34 +162,6 @@ jobs:
                   ./fastlane/deploy_android.sh build_aab
                 fi
                 
-            
-            # 构建安卓的apk包，Abb包
-            - name: android build test
-              env:
-                GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                DEBUG: tamagui
-              if: ${{ github.event.inputs.environment == 'test' }}
-              run: |
-                if [ "${{ github.event.inputs.testUserCacheAPK }}" == "false" ]; then
-                    cd ${{ github.event.inputs.appName }}/android
-                    ./fastlane/deploy_android.sh build_debug
-                else
-                    cd ${{ github.event.inputs.appName }}/android
-                    
-                    mkdir -p app/build/outputs/apk/debug
-                    mkdir -p app/build/outputs/apk/androidTest/debug
-
-                    TAG="v1.0.0-data"
-
-                    gh release download $TAG --pattern 'app-debug.apk' --clobber
-                    gh release download $TAG --pattern 'app-debug-androidTest.apk' --clobber
-
-                    mv app-debug.apk app/build/outputs/apk/debug/app-debug.apk
-                    mv app-debug-androidTest.apk app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-                    
-                    ls -lR app/build/outputs/apk/
-                fi
-            
  
             - name: Run Detox tests
               uses: reactivecircus/android-emulator-runner@v2
@@ -222,7 +215,6 @@ jobs:
                 name: detox-debug-artifacts
                 path: |
                   ${{ github.event.inputs.appName }}/debug
-                  ${{ github.event.inputs.appName }}/artifacts/**/*.png
                   ${{ github.event.inputs.appName }}/android/fastlane/metadata/android
                 retention-days: 5
 
