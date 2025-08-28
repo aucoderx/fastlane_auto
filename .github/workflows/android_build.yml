@@ -79,7 +79,7 @@ jobs:
               if: ${{ github.event.inputs.environment == 'test' }}
               run: |
                 mkdir -p fastlane_templates/certificates/
-                echo ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }} > fastlane_templates/certificates/google-play-service-account.json
+                printf "%s" "${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}" > fastlane_templates/certificates/google-play-service-account.json
 
 
             - name: Parse S3_SECRET
