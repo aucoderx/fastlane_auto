@@ -192,7 +192,7 @@ platform :android do
   desc "构建 AAB"
   lane :build_aab do
     gradle(
-      task: "clean bundleRelease",
+      task: "bundleRelease",
       project_dir: "."
     )
   end
