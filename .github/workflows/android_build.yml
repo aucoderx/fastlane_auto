@@ -164,6 +164,7 @@ jobs:
                 
  
             - name: Run Detox tests
+              if: ${{ github.event.inputs.needScreengrab == 'true' }}
               uses: reactivecircus/android-emulator-runner@v2
               with:
                 api-level: 29
@@ -185,6 +186,7 @@ jobs:
                     timeout 300 bash -c 'until adb shell pm list packages > /dev/null 2>&1; do sleep 5; done'
 
                     adb shell wm size
+                    adb shell dumpsys activity top
                     mkdir -p ${{ github.event.inputs.appName }}/debug
                     adb exec-out screencap -p > ${{ github.event.inputs.appName }}/debug/SystemUI1.png
 
