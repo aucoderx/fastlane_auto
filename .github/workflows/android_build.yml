@@ -37,11 +37,20 @@ jobs:
             contents: read
         env:
           NODE_ENV: development
+          
         steps:
             - name: Checkout Code
               uses: actions/checkout@v4
               with:
                 fetch-depth: 1
+
+            - name: 检查 Java 安装路径
+              run: ls -l /usr/lib/jvm/
+
+            - name: 删除不需要的 Java 版本
+              run: |
+                sudo rm -rf /usr/lib/jvm/temurin-11*
+                sudo rm -rf /usr/lib/jvm/temurin-21*
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
@@ -172,7 +181,7 @@ jobs:
                 arch: x86_64
                 ram-size: 2048M
                 heap-size: 512M
-                disk-size: 3072M
+                disk-size: 4096M
                 avd-name: Android_API29
                 force-avd-creation: false
                 emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-skin -no-metrics

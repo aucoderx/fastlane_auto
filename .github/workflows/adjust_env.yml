@@ -10,28 +10,16 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-    
-      - name: Parse S3_SECRET
-        id: parse
-        if: ${{ github.event.inputs.environment == 'test' }}
+
+      - name: 检查 Java 安装路径
+        run: ls -l /usr/lib/jvm/
+
+      - name: 删除不需要的 Java 版本
         run: |
-          # 使用管道避免写入文件系统
-          ENV_FILE="fastlane_templates/.env"
-
-          AWS_ID=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_access_key_id')
-          AWS_KEY=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_secret_access_key')
-          AWS_REG=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.region_name')
-          BUCKET=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.bucket_name')
-
-
-          sed -i '' "s|^AWS_ACCESS_KEY_ID=.*|AWS_ACCESS_KEY_ID='${AWS_ID}'|" $ENV_FILE
-          sed -i '' "s|^AWS_SECRET_ACCESS_KEY=.*|AWS_SECRET_ACCESS_KEY='${AWS_KEY}'|" $ENV_FILE
-          sed -i '' "s|^AWS_REGION=.*|AWS_REGION='${AWS_REG}'|" $ENV_FILE
-          sed -i '' "s|^BUCKET_NAME=.*|BUCKET_NAME='${BUCKET}'|" $ENV_FILE
-
-          cat $ENV_FILE 
+          sudo rm -rf /usr/lib/jvm/temurin-11*
+          sudo rm -rf /usr/lib/jvm/temurin-21*
