@@ -155,7 +155,6 @@ replace_template_variables() {
     sed -i.bak "s/{{PROVISIONING_PROFILE_NAME}}/${PROVISIONING_PROFILE_NAME:-match AppStore ${BUNDLE_ID}}/g" "$output_file"
     sed -i.bak "s#{{APP_STORE_CONNECT_API_KEY_PATH}}#${APP_STORE_CONNECT_API_KEY_PATH:-fastlane/certificates/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8}#g" "$output_file"
     sed -i.bak "s#{{GOOGLE_PLAY_JSON_KEY_PATH}}#${GOOGLE_PLAY_JSON_KEY_PATH}#g" "$output_file"
-    sed -i.bak "s#{{ANDROID_PROJECT_DIR}}#${ANDROID_PROJECT_DIR:-android}#g" "$output_file"
     sed -i.bak "s/{{APP_CATEGORY}}/${APP_CATEGORY:-PRODUCTIVITY}/g" "$output_file"
     sed -i.bak "s/{{APP_SECONDARY_CATEGORY}}/${APP_SECONDARY_CATEGORY:-BUSINESS}/g" "$output_file"
     sed -i.bak "s/{{SUBMIT_FOR_REVIEW}}/${SUBMIT_FOR_REVIEW:-false}/g" "$output_file"

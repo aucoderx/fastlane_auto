@@ -24,7 +24,7 @@ on:
         required: false
         default: 'false'
       appUploadCommand:
-        description: 'app upload commend'
+        description: 'app upload command'
         required: false
         default: 'test_flight'
       language:
@@ -95,7 +95,6 @@ jobs:
           curl -L https://your-server.com/expo-source.zip -o app-demo.zip
           unzip app-demo.zip
       
-  
       # 缓存 npm 安装结果，流程执行完的后续节点进行的缓存，如果流程执行失败，缓存会失败
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -103,6 +102,15 @@ jobs:
           node-version: 22.2.0
           cache: 'npm'
           cache-dependency-path: './${{ github.event.inputs.appName }}/package-lock.json'
+
+      - name: Cache Expo CLI
+        uses: actions/cache@v4
+        with:
+          path: ~/.expo
+              # 由於 package.json 相同，使用 lock 檔案來決定 Expo 工具鏈的快取
+          key: ${{ runner.os }}-expo-${{ hashFiles(format('{0}/package-lock.json', github.event.inputs.appName)) }}
+          restore-keys: |
+            ${{ runner.os }}-expo-
       
       # npm 安装依赖
       - name: Install dependencies
