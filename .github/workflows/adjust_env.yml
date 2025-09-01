@@ -13,9 +13,14 @@ on:
         default: 'app-demo'
 
 jobs:
-  build:
+  main-task:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    outputs:
+      # 定义一个 job 的输出，用于通知步骤
+      lock_status: ${{ steps.acquire_lock.outputs.status }}
+      job_conclusion: ${{ job.status }}
 
     steps:
       - name: Checkout code
@@ -24,6 +29,9 @@ jobs:
       - name: install redis
         run: |
           sudo apt-get update && sudo apt-get install -y redis-tools
+          echo "REDIS_HOST=$(echo '${{ secrets.REDIS_CONF }}' | jq -r '.redis_host')" >> $GITHUB_ENV
+          echo "REDIS_PORT=$(echo '${{ secrets.REDIS_CONF }}' | jq -r '.redis_port')" >> $GITHUB_ENV
+          echo "REDIS_PASSWORD=$(echo '${{ secrets.REDIS_CONF }}' | jq -r '.password')" >> $GITHUB_ENV
 
       - name: '2. 生成唯一的 Lock Key'
         id: lock_key_generator
@@ -41,9 +49,9 @@ jobs:
           LOCK_VALUE="${{ github.run_id }}-${{ github.run_attempt }}"
           LOCK_TIMEOUT=1800 # 30分钟
           RESULT=$(redis-cli \
-            -h ${{ secrets.REDIS_HOST }} \
-            -p ${{ secrets.REDIS_PORT }} \
-            -a ${{ secrets.REDIS_PASSWORD }} \
+            -h ${{ env.REDIS_HOST }} \
+            -p ${{ env.REDIS_PORT }} \
+            -a ${{ env.REDIS_PASSWORD }} \
             SET ${{ steps.lock_key_generator.outputs.lock_key }} "$LOCK_VALUE" NX EX $LOCK_TIMEOUT)
 
           if [ "$RESULT" == "OK" ]; then
@@ -63,7 +71,7 @@ jobs:
           echo "环境: ${{ github.event.inputs.environment }}"
           echo "服务: ${{ github.event.inputs.service_name }}"
           # 模拟一个长时间运行的任务
-          sleep 30
+          sleep 60
           echo "主要任务执行完毕。"
           # 假设这里有一个部署成功的标志
           echo "deployment_result=success" >> $GITHUB_OUTPUT
@@ -75,9 +83,9 @@ jobs:
         run: |
           if [ "${{ steps.acquire_lock.outcome }}" == "success" ]; then
             redis-cli \
-              -h ${{ secrets.REDIS_HOST }} \
-              -p ${{ secrets.REDIS_PORT }} \
-              -a ${{ secrets.REDIS_PASSWORD }} \
+              -h ${{ env.REDIS_HOST }} \
+              -p ${{ env.REDIS_PORT }} \
+              -a ${{ env.REDIS_PASSWORD }} \
               DEL ${{ steps.lock_key_generator.outputs.lock_key }}
             echo "锁已释放。"
           else
