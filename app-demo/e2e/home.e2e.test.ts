@@ -27,7 +27,7 @@ describe('Home Screen', () => {
     await new Promise(resolve => setTimeout(resolve, 5000));
     await device.takeScreenshot(platform + '_tab-card-list');
     if (platform === 'android') {
-      await device.takeScreenshot(platform + '_tab-index');
+      await device.takeScreenshot(platform + '_tab-card-list');
     } else {
       await device.takeScreenshot('iPhone-13-Pro-' + 'tab-card-list');
     }
@@ -36,7 +36,7 @@ describe('Home Screen', () => {
     await element(by.id('tab-user-center')).tap();
     await new Promise(resolve => setTimeout(resolve, 5000));
     if (platform === 'android') {
-      await device.takeScreenshot(platform + '_tab-index');
+      await device.takeScreenshot(platform + '_tab-user-center');
     } else {
       await device.takeScreenshot('iPhone-13-Pro-' + 'tab-user-center');
     }
@@ -47,7 +47,7 @@ describe('Home Screen', () => {
     await element(by.id('news-item-0')).tap();
     await new Promise(resolve => setTimeout(resolve, 5000)); 
     if (platform === 'android') {
-      await device.takeScreenshot(platform + '_tab-index');
+      await device.takeScreenshot(platform + '_news-item-detail');
     } else {
       await device.takeScreenshot('iPhone-13-Pro-' + 'news-item-detail');
     }

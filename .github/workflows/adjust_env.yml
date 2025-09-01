@@ -7,19 +7,107 @@ on:
         description: 'Choose environment (prod or test)'
         required: true
         default: 'prod'
+      appName:
+        description: 'app name'
+        required: true
+        default: 'app-demo'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: 检查 Java 安装路径
-        run: ls -l /usr/lib/jvm/
-
-      - name: 删除不需要的 Java 版本
+      - name: install redis
         run: |
-          sudo rm -rf /usr/lib/jvm/temurin-11*
-          sudo rm -rf /usr/lib/jvm/temurin-21*
+          sudo apt-get update && sudo apt-get install -y redis-tools
+
+      - name: '2. 生成唯一的 Lock Key'
+        id: lock_key_generator
+        run: |
+          # 将输入参数组合并通过 sha256sum 生成一个固定的、唯一的 key
+          # 这样可以确保相同参数的请求生成相同的 key
+          KEY_STRING="${{ github.event.inputs.environment }}-${{ github.event.inputs.appName }}"
+          LOCK_KEY="github-action-lock:$(echo -n $KEY_STRING | sha256sum | cut -d' ' -f1)"
+          echo "Generated Lock Key: $LOCK_KEY"
+          echo "lock_key=$LOCK_KEY" >> $GITHUB_OUTPUT
+
+      - name: '3. 尝试获取 Redis 锁'
+        id: acquire_lock
+        run: |
+          LOCK_VALUE="${{ github.run_id }}-${{ github.run_attempt }}"
+          LOCK_TIMEOUT=1800 # 30分钟
+          RESULT=$(redis-cli \
+            -h ${{ secrets.REDIS_HOST }} \
+            -p ${{ secrets.REDIS_PORT }} \
+            -a ${{ secrets.REDIS_PASSWORD }} \
+            SET ${{ steps.lock_key_generator.outputs.lock_key }} "$LOCK_VALUE" NX EX $LOCK_TIMEOUT)
+
+          if [ "$RESULT" == "OK" ]; then
+            echo "成功获取锁，将继续执行任务。"
+            echo "status=acquired" >> $GITHUB_OUTPUT
+          else
+            echo "获取锁失败，任务已被锁定。将跳过主要步骤。"
+            echo "status=locked" >> $GITHUB_OUTPUT
+          fi      
+
+      - name: '4. 执行核心任务（仅在获取锁后）'
+        id: core_task
+        # 关键条件：只有当 acquire_lock 步骤的输出 status 为 'acquired' 时才运行
+        if: steps.acquire_lock.outputs.status == 'acquired'
+        run: |
+          echo "锁已获取，开始执行主要任务..."
+          echo "环境: ${{ github.event.inputs.environment }}"
+          echo "服务: ${{ github.event.inputs.service_name }}"
+          # 模拟一个长时间运行的任务
+          sleep 30
+          echo "主要任务执行完毕。"
+          # 假设这里有一个部署成功的标志
+          echo "deployment_result=success" >> $GITHUB_OUTPUT
+
+      
+      - name: '5. 释放 Redis 锁'
+        # 使用 if: always() 确保无论任务成功还是失败，都会尝试释放锁
+        if: always() && steps.acquire_lock.outputs.status == 'acquired'
+        run: |
+          if [ "${{ steps.acquire_lock.outcome }}" == "success" ]; then
+            redis-cli \
+              -h ${{ secrets.REDIS_HOST }} \
+              -p ${{ secrets.REDIS_PORT }} \
+              -a ${{ secrets.REDIS_PASSWORD }} \
+              DEL ${{ steps.lock_key_generator.outputs.lock_key }}
+            echo "锁已释放。"
+          else
+            echo "未曾获取锁，无需释放。"
+          fi
+
+
+  # 使用一个独立的 Job 来处理通知，这样逻辑更清晰
+  # 它依赖于 main-task job，并在其完成后运行
+  notify-server:
+    runs-on: ubuntu-latest
+    needs: main-task # 依赖 main-task job
+    if: always() # 无论 main-task 成功、失败还是被跳过，都运行此 job
+
+    steps:
+      - name: '发送任务完成情况通知'
+        run: |
+          LOCK_STATUS="${{ needs.main-task.outputs.lock_status }}"
+          JOB_CONCLUSION="${{ needs.main-task.outputs.job_conclusion }}"
+          
+          # 决定最终的通知状态
+          FINAL_STATUS=""
+          if [ "$LOCK_STATUS" == "locked" ]; then
+            FINAL_STATUS="skipped_due_to_lock"
+            echo "任务因锁定被跳过。"
+          elif [ "$JOB_CONCLUSION" == "success" ]; then
+            FINAL_STATUS="success"
+            echo "任务执行成功。"
+          else
+            # 如果获取了锁，但 job 失败了
+            FINAL_STATUS="failure"
+            echo "任务执行失败。"
+          fi
