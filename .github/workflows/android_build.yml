@@ -37,6 +37,11 @@ jobs:
             contents: read
         env:
           NODE_ENV: development
+
+        outputs:
+          # 定义一个 job 的输出，用于通知步骤
+          lock_status: ${{ steps.acquire_lock.outputs.status }}
+          job_conclusion: ${{ job.status }}
           
         steps:
             - name: Checkout Code
@@ -44,10 +49,57 @@ jobs:
               with:
                 fetch-depth: 1
 
-            - name: 检查 Java 安装路径
-              run: ls -l /usr/lib/jvm/
+            - name: Parse SECRET
+              id: parse
+              run: |
+                # AWS S3
+                echo "AWS_ACCESS_KEY_ID=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_access_key_id')" >> $GITHUB_ENV
+                echo "AWS_SECRET_ACCESS_KEY=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_secret_access_key')" >> $GITHUB_ENV
+                echo "AWS_REGION=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.region_name')" >> $GITHUB_ENV
+                echo "BUCKET_NAME=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.bucket_name')" >> $GITHUB_ENV
 
-            - name: 删除不需要的 Java 版本
+                # redis
+                echo "REDIS_HOST=$(echo '${{ secrets.REDIS_CONF }}' | jq -r '.redis_host')" >> $GITHUB_ENV
+                echo "REDIS_PORT=$(echo '${{ secrets.REDIS_CONF }}' | jq -r '.redis_port')" >> $GITHUB_ENV
+                echo "REDIS_PASSWORD=$(echo '${{ secrets.REDIS_CONF }}' | jq -r '.password')" >> $GITHUB_ENV
+
+            - name: Install system dependencies
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y libpulse0
+                sudo apt-get install -y redis-tools
+
+            - name: '生成唯一的 Lock Key'
+              id: lock_key_generator
+              run: |
+                # 将输入参数组合并通过 sha256sum 生成一个固定的、唯一的 key
+                # 这样可以确保相同参数的请求生成相同的 key
+                KEY_STRING="${{ github.event.inputs.environment }}-${{ github.event.inputs.appName }}-android"
+                LOCK_KEY="github-action-lock:$(echo -n $KEY_STRING | sha256sum | cut -d' ' -f1)"
+                echo "Generated Lock Key: $LOCK_KEY"
+                echo "lock_key=$LOCK_KEY" >> $GITHUB_OUTPUT
+
+            - name: '尝试获取 Redis 锁'
+              id: acquire_lock
+              run: |
+                LOCK_VALUE="${{ github.run_id }}-${{ github.run_attempt }}"
+                LOCK_TIMEOUT=1800 # 30分钟
+                RESULT=$(redis-cli \
+                  -h ${{ env.REDIS_HOST }} \
+                  -p ${{ env.REDIS_PORT }} \
+                  -a ${{ env.REDIS_PASSWORD }} \
+                  SET ${{ steps.lock_key_generator.outputs.lock_key }} "$LOCK_VALUE" NX EX $LOCK_TIMEOUT)
+
+                if [ "$RESULT" == "OK" ]; then
+                  echo "成功获取锁，将继续执行任务。"
+                  echo "status=acquired" >> $GITHUB_OUTPUT
+                else
+                  echo "获取锁失败，任务已被锁定。将跳过主要步骤。"
+                  echo "status=locked" >> $GITHUB_OUTPUT
+                fi      
+
+
+            - name: 删除不需要的 Java 版本(节省系统空间)
               run: |
                 sudo rm -rf /usr/lib/jvm/temurin-11*
                 sudo rm -rf /usr/lib/jvm/temurin-21*
@@ -70,11 +122,6 @@ jobs:
               with:
                 distribution: zulu
                 java-version: 17
-            
-            - name: Install system dependencies
-              run: |
-                sudo apt-get update
-                sudo apt-get install -y libpulse0
 
             # 线上环境，下载项目源码
             - name: Download Expo source (for prod environment)
@@ -89,17 +136,6 @@ jobs:
               run: |
                 mkdir -p fastlane_templates/certificates/
                 printf "%s" "${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}" > fastlane_templates/certificates/google-play-service-account.json
-
-
-            - name: Parse S3_SECRET
-              id: parse
-              if: ${{ github.event.inputs.environment == 'test' }}
-              run: |
-                # 使用管道避免写入文件系统
-                echo "AWS_ACCESS_KEY_ID=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_access_key_id')" >> $GITHUB_ENV
-                echo "AWS_SECRET_ACCESS_KEY=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.aws_secret_access_key')" >> $GITHUB_ENV
-                echo "AWS_REGION=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.region_name')" >> $GITHUB_ENV
-                echo "BUCKET_NAME=$(echo '${{ secrets.S3_SECRET }}' | jq -r '.bucket_name')" >> $GITHUB_ENV
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4

@@ -60,12 +60,11 @@ jobs:
           else
             echo "获取锁失败，任务已被锁定。将跳过主要步骤。"
             echo "status=locked" >> $GITHUB_OUTPUT
+            exit 1
           fi      
 
       - name: '4. 执行核心任务（仅在获取锁后）'
         id: core_task
-        # 关键条件：只有当 acquire_lock 步骤的输出 status 为 'acquired' 时才运行
-        if: steps.acquire_lock.outputs.status == 'acquired'
         run: |
           echo "锁已获取，开始执行主要任务..."
           echo "环境: ${{ github.event.inputs.environment }}"
