@@ -28,7 +28,8 @@ jobs:
 
       - name: install redis
         run: |
-          sudo apt-get update && sudo apt-get install -y redis-tools
+          sudo apt-get remove --purge -y man-db
+          sudo apt-get update && sudo apt-get install -y redis-tools 
           echo "REDIS_HOST=$(echo '${{ secrets.REDIS_CONF }}' | jq -r '.redis_host')" >> $GITHUB_ENV
           echo "REDIS_PORT=$(echo '${{ secrets.REDIS_CONF }}' | jq -r '.redis_port')" >> $GITHUB_ENV
           echo "REDIS_PASSWORD=$(echo '${{ secrets.REDIS_CONF }}' | jq -r '.password')" >> $GITHUB_ENV
@@ -65,6 +66,8 @@ jobs:
 
       - name: '4. 执行核心任务（仅在获取锁后）'
         id: core_task
+        # 关键条件：只有当 acquire_lock 步骤的输出 status 为 'acquired' 时才运行
+        if: steps.acquire_lock.outputs.status == 'acquired'
         run: |
           echo "锁已获取，开始执行主要任务..."
           echo "环境: ${{ github.event.inputs.environment }}"

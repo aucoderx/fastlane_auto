@@ -78,7 +78,7 @@ jobs:
               run: |
                 # 将输入参数组合并通过 sha256sum 生成一个固定的、唯一的 key
                 # 这样可以确保相同参数的请求生成相同的 key
-                LOCK_KEY="github-action-lock:${{ github.event.inputs.environment }}-${{ github.event.inputs.projectID }}- android"
+                LOCK_KEY="github-action-lock:${{ github.event.inputs.environment }}-${{ github.event.inputs.projectID }}-android"
                 echo "Generated Lock Key: $LOCK_KEY"
                 echo "lock_key=$LOCK_KEY" >> $GITHUB_OUTPUT
 
