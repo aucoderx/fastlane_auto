@@ -7,10 +7,10 @@ on:
         description: 'Choose environment (prod or test)'
         required: true
         default: 'test'
-      appName:
-        description: 'app name'
+      projectID:
+        description: 'project id'
         required: true
-        default: 'app-demo'
+        default: ''
       needPackType:
         description: 'need pack type'
         required: true
@@ -27,11 +27,15 @@ on:
         description: 'app use language'
         required: false
         default: 'zh-Hans'
+      runner_name:
+        description: 'runner name'
+        required: false
+        default: '4c-Ubuntu-X64'
 
 jobs:
-    build-and-test-android:
+    main-task:
         name: Android - Build and run Detox tests
-        runs-on: ubuntu-latest
+        runs-on: ${{ github.event.inputs.runner_name }}
         timeout-minutes: 60
         permissions:
             contents: read
@@ -74,8 +78,7 @@ jobs:
               run: |
                 # 将输入参数组合并通过 sha256sum 生成一个固定的、唯一的 key
                 # 这样可以确保相同参数的请求生成相同的 key
-                KEY_STRING="${{ github.event.inputs.environment }}-${{ github.event.inputs.appName }}-android"
-                LOCK_KEY="github-action-lock:$(echo -n $KEY_STRING | sha256sum | cut -d' ' -f1)"
+                LOCK_KEY="github-action-lock:${{ github.event.inputs.environment }}-${{ github.event.inputs.projectID }}- android"
                 echo "Generated Lock Key: $LOCK_KEY"
                 echo "lock_key=$LOCK_KEY" >> $GITHUB_OUTPUT
 
@@ -96,6 +99,7 @@ jobs:
                 else
                   echo "获取锁失败，任务已被锁定。将跳过主要步骤。"
                   echo "status=locked" >> $GITHUB_OUTPUT
+                  exit 1
                 fi      
 
 
@@ -109,7 +113,7 @@ jobs:
               with:
                 node-version: 22.2.0
                 cache: 'npm'
-                cache-dependency-path: './${{ github.event.inputs.appName }}/package-lock.json'
+                cache-dependency-path: './app-demo/package-lock.json'
 
             - name: Set up Ruby
               uses: ruby/setup-ruby@v1
@@ -126,13 +130,14 @@ jobs:
             # 线上环境，下载项目源码
             - name: Download Expo source (for prod environment)
               if: ${{ github.event.inputs.environment == 'prod' }}
-              run: |
-                curl -L https://your-server.com/expo-source.zip -o app-demo.zip
-                unzip app-demo.zip
+              uses: ./.github/actions/download_project
+              with:
+                env: dev
+                project_id: myproject
             
             # 测试环境，恢复谷歌服务账号
             - name: deal test env
-              if: ${{ github.event.inputs.environment == 'test' }}
+              if: ${{ github.event.inputs.environment != 'prod' }}
               run: |
                 mkdir -p fastlane_templates/certificates/
                 printf "%s" "${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}" > fastlane_templates/certificates/google-play-service-account.json
@@ -150,12 +155,12 @@ jobs:
               if: ${{ github.event.inputs.environment == 'prod' }}
               run: |
                 mkdir -p fastlane_templates/certificates/
-                aws s3 cp s3://${{ env.BUCKET_NAME }}/${{ github.event.inputs.appName }}/certificates/google-play-service-account.json fastlane_templates/certificates/google-play-service-account.json
+                aws s3 cp s3://${{ env.BUCKET_NAME }}/${{ github.event.inputs.projectID }}/certificates/google-play-service-account.json fastlane_templates/certificates/google-play-service-account.json
 
             
             - name: Npm install
               run: |
-                cd ${{ github.event.inputs.appName }}
+                cd app-demo
                 npm install
 
             - name: Cache Expo CLI
@@ -182,18 +187,18 @@ jobs:
             # 构建安卓源码
             - name: Build for or Android
               run: |
-                cd ${{ github.event.inputs.appName }}
+                cd app-demo
                 npx expo prebuild --platform android
 
             # 执行fastlane配置脚本
             - name: exec manage_fastlane.sh
               run: |
-                ./manage_fastlane.sh ${{ github.event.inputs.appName }} android
+                ./manage_fastlane.sh app-demo android
 
             # 构建安卓的apk包，Abb包(prod)
             - name: android build prod
               run: |
-                cd ${{ github.event.inputs.appName }}/android
+                cd app-demo/android
                 NEED_PACK_TYPE="${{ github.event.inputs.needPackType }}"
                 NEED_SCREEN_GRAB="${{ github.event.inputs.needScreengrab }}"
 
@@ -207,7 +212,13 @@ jobs:
                   ./fastlane/deploy_android.sh build_aab
                 fi
                 
- 
+            - name: Enable KVM group perms
+              if: ${{ github.event.inputs.runner_name == '4c-Ubuntu-X64' }} && ${{ github.event.inputs.needScreengrab == 'true' }}
+              run: |
+                echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+                sudo udevadm control --reload-rules
+                sudo udevadm trigger --name-match=kvm
+            
             - name: Run Detox tests
               if: ${{ github.event.inputs.needScreengrab == 'true' }}
               uses: reactivecircus/android-emulator-runner@v2
@@ -232,44 +243,45 @@ jobs:
 
                     adb shell wm size
                     adb shell dumpsys activity top
-                    mkdir -p ${{ github.event.inputs.appName }}/debug
-                    adb exec-out screencap -p > ${{ github.event.inputs.appName }}/debug/SystemUI1.png
+                    mkdir -p app-demo/debug
+                    adb exec-out screencap -p > app-demo/debug/SystemUI1.png
 
                     adb shell input tap 540 1100
-                    adb exec-out screencap -p > ${{ github.event.inputs.appName }}/debug/SystemUI-540-1100.png
+                    adb exec-out screencap -p > app-demo/debug/SystemUI-540-1100.png
 
                     adb shell input tap 540 1150
-                    adb exec-out screencap -p > ${{ github.event.inputs.appName }}/debug/SystemUI-540-1150.png
+                    adb exec-out screencap -p > app-demo/debug/SystemUI-540-1150.png
 
                     adb shell input tap 500 1150
-                    adb exec-out screencap -p > ${{ github.event.inputs.appName }}/debug/SystemUI-500-1150.png
+                    adb exec-out screencap -p > app-demo/debug/SystemUI-500-1150.png
 
 
-                    cd ${{ github.event.inputs.appName }}/android && ./fastlane/deploy_android.sh screengrab
+                    cd app-demo/android && ./fastlane/deploy_android.sh screengrab
           
             # 安卓上传应用市场
             - name: android appUpload
               if: ${{ github.event.inputs.appUploadCommand != '' }}
               run: |
-                cd ${{ github.event.inputs.appName }}/android
+                cd app-demo/android
                 ./fastlane/deploy_android.sh ${{github.event.inputs.appUploadCommand}}
 
             
             - name: Upload Screenshots and Logs
-              if: always()  
+              if: always() && steps.acquire_lock.outputs.status == 'acquired'
               uses: actions/upload-artifact@v4
               with:
                 name: detox-debug-artifacts
                 path: |
-                  ${{ github.event.inputs.appName }}/debug
-                  ${{ github.event.inputs.appName }}/android/fastlane/metadata/android
+                  app-demo/debug
+                  app-demo/android/fastlane/metadata/android
                 retention-days: 5
 
             - name: Upload build to S3
               continue-on-error: true
               run: |
                 # 上传文件夹带 --recursive
-                APP_NAME="${{ github.event.inputs.appName }}"
+                APP_NAME="app-demo"
+                PROJECT_ID="${{ github.event.inputs.projectID }}" 
 
                 APK_PATH="$APP_NAME/android/app/build/outputs/apk/debug/app-debug.apk"
                 AAB_PATH="$APP_NAME/android/app/build/outputs/bundle/release/app-release.aab"
@@ -279,21 +291,64 @@ jobs:
 
                 # 上传 APK
                 if [ -f "$APK_PATH" ]; then
-                  echo "Uploading $APK_PATH to s3://${{ env.BUCKET_NAME }}/$APP_NAME/"
-                  aws s3 cp "$APK_PATH" "s3://${{ env.BUCKET_NAME }}/$APP_NAME/"
+                  echo "Uploading $APK_PATH to s3://${{ env.BUCKET_NAME }}/$PROJECT_ID/"
+                  aws s3 cp "$APK_PATH" "s3://${{ env.BUCKET_NAME }}/$PROJECT_ID/"
                 fi
 
                 # 上传 AAB
                 if [ -f "$AAB_PATH" ]; then
-                  echo "Uploading $AAB_PATH to s3://${{ env.BUCKET_NAME }}/$APP_NAME/"
-                  aws s3 cp "$AAB_PATH" "s3://${{ env.BUCKET_NAME }}/$APP_NAME/"
+                  echo "Uploading $AAB_PATH to s3://${{ env.BUCKET_NAME }}/$PROJECT_ID/"
+                  aws s3 cp "$AAB_PATH" "s3://${{ env.BUCKET_NAME }}/$PROJECT_ID/"
                 fi
 
                 # 上传截图文件夹
                 if [ -d "$SCREENSHOT_DIR" ]; then
                   if [ "$(ls -A "$SCREENSHOT_DIR")" ]; then
-                    echo "Uploading screenshots from $SCREENSHOT_DIR to s3://${{ env.BUCKET_NAME }}/$APP_NAME/phoneScreenshots/"
-                    aws s3 cp "$SCREENSHOT_DIR" "s3://${{ env.BUCKET_NAME }}/$APP_NAME/phoneScreenshots/" --recursive
+                    echo "Uploading screenshots from $SCREENSHOT_DIR to s3://${{ env.BUCKET_NAME }}/$PROJECT_ID/phoneScreenshots/"
+                    aws s3 cp "$SCREENSHOT_DIR" "s3://${{ env.BUCKET_NAME }}/$PROJECT_ID/phoneScreenshots/" --recursive
                   fi
                 fi
-        
+
+            - name: '释放 Redis 锁'
+              # 使用 if: always() 确保无论任务成功还是失败，都会尝试释放锁
+              if: always() && steps.acquire_lock.outputs.status == 'acquired'
+              run: |
+                if [ "${{ steps.acquire_lock.outcome }}" == "success" ]; then
+                  redis-cli \
+                    -h ${{ env.REDIS_HOST }} \
+                    -p ${{ env.REDIS_PORT }} \
+                    -a ${{ env.REDIS_PASSWORD }} \
+                    DEL ${{ steps.lock_key_generator.outputs.lock_key }}
+                  echo "锁已释放。"
+                else
+                  echo "未曾获取锁，无需释放。"
+                fi
+  
+
+    # 使用一个独立的 Job 来处理通知，这样逻辑更清晰
+    # 它依赖于 main-task job，并在其完成后运行
+    notify-server:
+      runs-on: ubuntu-latest
+      needs: main-task # 依赖 main-task job
+      if: always() # 无论 main-task 成功、失败还是被跳过，都运行此 job
+
+      steps:
+        - name: '发送任务完成情况通知'
+          run: |
+            LOCK_STATUS="${{ needs.main-task.outputs.lock_status }}"
+            JOB_CONCLUSION="${{ needs.main-task.outputs.job_conclusion }}"
+            
+            # 决定最终的通知状态
+            FINAL_STATUS=""
+            if [ "$LOCK_STATUS" == "locked" ]; then
+              FINAL_STATUS="skipped_due_to_lock"
+              echo "任务因锁定被跳过。"
+            elif [ "$JOB_CONCLUSION" == "success" ]; then
+              FINAL_STATUS="success"
+              echo "任务执行成功。"
+            else
+              # 如果获取了锁，但 job 失败了
+              FINAL_STATUS="failure"
+              echo "任务执行失败。"
+            fi
+          

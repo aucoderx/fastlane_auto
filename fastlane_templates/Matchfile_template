@@ -6,7 +6,7 @@ s3_secret_access_key("{{AWS_SECRET_ACCESS_KEY}}")
 s3_bucket("{{BUCKET_NAME}}")
 
 # 存放在 bucket 下的指定目录，比如 ios/certs/
-s3_object_prefix("{{PROJECT_NAME}}/certs/")
+s3_object_prefix("{{PROJECT_ID}}/certs/")
 
 type("appstore") # The default type, can be: appstore, adhoc, enterprise or development
 

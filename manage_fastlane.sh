@@ -130,7 +130,7 @@ replace_template_variables() {
 
 
     # 基本应用信息
-    sed -i.bak "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$output_file"
+    sed -i.bak "s/{{PROJECT_ID}}/${PROJECT_ID}/g" "$output_file"
     sed -i.bak "s/{{APP_NAME}}/${APP_NAME}/g" "$output_file"
     sed -i.bak "s/{{BUNDLE_ID}}/${BUNDLE_ID}/g" "$output_file"
     sed -i.bak "s/{{ANDROID_PACKAGE_NAME}}/${ANDROID_PACKAGE_NAME}/g" "$output_file"

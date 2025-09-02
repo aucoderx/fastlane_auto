@@ -1,0 +1,45 @@
+name: "Download and Setup Project"
+description: "Download project from server, extract, and install dependencies"
+inputs:
+  env:
+    description: "Environment (dev/test/pre/...)"
+    required: true
+  project_id:
+    description: "Project ID"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run download & setup
+      shell: bash
+      run: |
+        set -e
+        env="${{ inputs.env }}"
+        project_id="${{ inputs.project_id }}"
+
+        case "$env" in
+          dev) domain="https://pzdev.koudingvip.com" ;;
+          srpda) domain="https://pzsrpda.koudingvip.com" ;;
+          test) domain="https://pztest.koudingvip.com" ;;
+          pre) domain="https://pre.autocoder.cc" ;;
+          prod) domain="https://www.autocoder.cc" ;;
+          autopilottest) domain="https://autopilottest.koudingvip.com" ;;
+          *) echo "Error: invalid env"; exit 1 ;;
+        esac
+
+        echo "use domain: $domain"
+
+        tmp_file="$project_id.zip"
+
+        curl "$domain/api/project_pz/project/download?project_id=$project_id&has_module=false" \
+          -H "Authorization: autopilot123456" \
+          -o "$tmp_file"
+
+        unzip -q "$tmp_file" -d "$project_id"
+        
+        mv "$project_id/shared_data.json" .
+        mv "$project_id/app-demo" .
+
+        rm -f "$tmp_file"
+        rm -rf "$project_id"
